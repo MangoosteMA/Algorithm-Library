@@ -4,10 +4,8 @@ void and_convolution(std::vector<T> &a, bool inverse = false) {
     assert(!(n & (n - 1)));
     for (int bit = 0; bit < (n == 0 ? -1 : std::__lg(n)); bit++)
         for (int mask = 0; mask < n; mask++)
-            if (!(mask >> bit & 1)) {
-                assert((mask ^ (1 << bit)) < n);
+            if (!(mask >> bit & 1))
                 a[mask] += inverse ? -a[mask ^ (1 << bit)] : a[mask ^ (1 << bit)];
-            }
 }
 
 template<typename result_t, typename T1, typename T2>
