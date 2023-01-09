@@ -2,7 +2,7 @@ template<typename T>
 void or_convolution(std::vector<T> &a, bool inverse = false) {
     int n = a.size();
     assert(!(n & (n - 1)));
-    for (int bit = 0; bit <= (n == 0 ? -1 : std::__lg(n)); bit++)
+    for (int bit = 0; bit < (n == 0 ? -1 : std::__lg(n)); bit++)
         for (int mask = 0; mask < n; mask++)
             if (mask >> bit & 1)
                 a[mask] += inverse ? -a[mask ^ (1 << bit)] : a[mask ^ (1 << bit)];
