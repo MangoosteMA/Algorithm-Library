@@ -197,7 +197,7 @@ struct dynamic_modular_int_mod {
     static int mod;
 };
 
-int dynamic_modular_int_mod::mod = 0;
+int dynamic_modular_int_mod::mod = 998244353;
 int &MOD = dynamic_modular_int_mod::mod;
 
 using mint = dynamic_modular_int<dynamic_modular_int_mod>;
