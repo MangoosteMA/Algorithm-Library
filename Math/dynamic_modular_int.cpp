@@ -1,3 +1,5 @@
+// MOD assumed to be prime
+
 template<typename T>
 int normalize(T value, int mod) {
     if (value < -mod || value >= 2 * mod)
@@ -37,7 +39,7 @@ struct dynamic_modular_int {
     }
 
     mint inv() const {
-        return power(-1);
+        return power(T::mod - 2);
     }
 
     mint& operator=(const mint &x) {
