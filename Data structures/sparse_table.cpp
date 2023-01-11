@@ -20,6 +20,11 @@ struct sparse_table {
         }
     }
 
+    sparse_table& operator=(const sparse_table<T, merge_t> &another) {
+        sparse = another.sparse;
+        return *this;
+    }
+
     T query(int l, int r) const {
         assert(l < r);
         const int level = std::__lg(r - l);
