@@ -1,5 +1,11 @@
 namespace FFT {
     template<int mod>
+    void normilize(std::vector<static_modular_int<mod>> &poly) {
+        while (!poly.empty() && poly.back() == 0)
+            poly.pop_back();
+    }
+
+    template<int mod>
     void fft(std::vector<static_modular_int<mod>> &a) {
         using mint = static_modular_int<mod>;
 
@@ -133,13 +139,14 @@ namespace FFT {
         return a;
     }
 
+    // returns p^-1 modulo x^degree
     template<int mod, typename T>
     std::vector<static_modular_int<mod>> inverse(T begin, T end, int degree) {
         using mint = static_modular_int<mod>;
 
         int size = std::distance(begin, end);
         if (size == 0)
-            return std::vector<mint>(degree + 1);
+            return std::vector<mint>(degree);
 
         std::vector<mint> inv{1 / *begin};
         for (int power = 1; power <= degree; power <<= 1) {
@@ -151,7 +158,41 @@ namespace FFT {
                                 product.begin(), product.begin() + std::min<int>(product.size(), 2 * power));
             inv.resize(2 * power);
         }
-        inv.resize(degree + 1);
+        inv.resize(degree);
         return inv;
+    }
+
+    // returns (quotient, remainder)
+    template<int mod, typename T>
+    std::pair<std::vector<static_modular_int<mod>>, std::vector<static_modular_int<mod>>>
+        divide(T a_begin, T a_end, T b_begin, T b_end) {
+        using mint = static_modular_int<mod>;
+
+        std::vector<mint> a(a_begin, a_end), b(b_begin, b_end);
+        normilize(a), normilize(b);
+        assert(!b.empty());
+        int n = int(a.size()), m = int(b.size());
+        if (n < m)
+            return {{}, a};
+
+        std::reverse(a.begin(), a.end());
+        std::reverse(b.begin(), b.end());
+        auto inv_b = inverse<mod>(b.begin(), b.end(), n - m + 1);
+        auto quotient = multiply<mod>(a.begin(), a.end(), inv_b.begin(), inv_b.end());
+        quotient.resize(n - m + 1);
+        std::reverse(quotient.begin(), quotient.end());
+        normilize(quotient);
+
+        std::reverse(a.begin(), a.end());
+        std::reverse(b.begin(), b.end());
+        auto product = multiply<mod>(quotient.begin(), quotient.end(), b.begin(), b.end());
+        assert(int(product.size()) == int(a.size()));
+
+        std::vector<mint> remainder(m);
+        for (int i = 0; i < m; i++)
+            remainder[i] = a[i] - product[i];
+        
+        normilize(remainder);
+        return {quotient, remainder};
     }
 } // namespace FFT
