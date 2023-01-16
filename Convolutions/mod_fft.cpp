@@ -232,39 +232,38 @@ namespace FFT {
         int n = std::distance(x_begin, x_end);
         if (n == 0)
             return {};
-        
-        if (n <= 32 || std::distance(p_begin, p_end) <= 32) {
-            std::vector<mint> eval(n);
-            for (int i = 0; i < n; i++) {
-                mint cur_power = 1;
-                for (auto it = p_begin; it != p_end; it++, cur_power *= *(x_begin + i))
-                    eval[i] += *it * cur_power;
-            }
-            return eval;
-        }
 
-        int tree_size = n;
-        while (tree_size & (tree_size - 1))
-            tree_size++;
-        
+        static constexpr int N = 32;
+        const int tree_size = (n + N - 1) / N;
         std::vector<std::vector<mint>> tree(tree_size << 1);
-        std::fill(tree.begin() + tree_size + n, tree.end(), std::vector<mint>{1});
-        for (int i = 0; i < n; i++)
-            tree[tree_size + i] = {-*(x_begin + i), 1};
-        
-        for (int i = tree_size - 1; i >= 1; i--)
-            tree[i] = multiply<mod>(tree[i << 1].begin(), tree[i << 1].end(),
-                                    tree[i << 1 | 1].begin(), tree[i << 1 | 1].end());
-
-        tree[1] = divide<mod>(p_begin, p_end, tree[1].begin(), tree[1].end()).second;
-        for (int i = 2; i < tree_size + n; i++)
-            tree[i] = divide<mod>(tree[i >> 1].begin(), tree[i >> 1].end(),
-                                  tree[i].begin(), tree[i].end()).second;
+        for (int v = 0; v < tree_size; v++) {
+            int from = v * N, to = std::min(n, from + N);
+            tree[tree_size + v].resize(to - from + 1);
+            tree[tree_size + v][0] = 1;
+            for (int i = from; i < to; i++) {
+                for (int j = i - from; j >= 0; j--) {
+                    tree[tree_size + v][j + 1] += tree[tree_size + v][j];
+                    tree[tree_size + v][j] *= -*(x_begin + i);
+                }
+            }
+        }
+        for (int v = tree_size - 1; v > 0; v--)
+            tree[v] = FFT::multiply<MOD>(tree[v << 1].begin(), tree[v << 1].end(),
+                                         tree[v << 1 | 1].begin(), tree[v << 1 | 1].end());
+        tree[1] = divide<MOD>(p_begin, p_end, tree[1].begin(), tree[1].end()).second;
+        for (int v = 2; v < 2 * tree_size; v++)
+            tree[v] = divide<MOD>(tree[v >> 1].begin(), tree[v >> 1].end(),
+                                  tree[v].begin(), tree[v].end()).second;
 
         std::vector<mint> eval(n);
-        for (int i = 0; i < n; i++)
-            eval[i] = tree[tree_size + i].empty() ? 0 : tree[tree_size + i][0];
-
+        for (int v = 0; v < tree_size; v++) {
+            int from = v * N, to = std::min(n, from + N);
+            for (int i = from; i < to; i++) {
+                mint cur_power = 1;
+                for (int j = 0; j < int(tree[tree_size + v].size()); j++, cur_power *= *(x_begin + i))
+                    eval[i] += cur_power * tree[tree_size + v][j];
+            }
+        }
         return eval;
     }
 } // namespace FFT
