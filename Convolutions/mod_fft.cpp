@@ -191,7 +191,7 @@ namespace FFT {
         if (n < m)
             return {{}, a};
 
-        if (n <= 64 || m <= 20) {
+        if (n <= 128 || m <= 64) {
             std::vector<mint> quotient(n - m + 1);
             mint inv_b = 1 / b.back();
             for (int i = n - 1; i >= m - 1; i--) {
@@ -233,7 +233,7 @@ namespace FFT {
         if (n == 0)
             return {};
         
-        if (n <= 20 || std::distance(p_begin, p_end) <= 20) {
+        if (n <= 32 || std::distance(p_begin, p_end) <= 32) {
             std::vector<mint> eval(n);
             for (int i = 0; i < n; i++) {
                 mint cur_power = 1;
