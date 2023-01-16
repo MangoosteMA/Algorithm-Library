@@ -1,6 +1,6 @@
 namespace FFT {
-    template<int mod>
-    void normilize(std::vector<static_modular_int<mod>> &poly) {
+    template<typename T>
+    void normilize(T &poly) {
         while (!poly.empty() && poly.back() == 0)
             poly.pop_back();
     }
@@ -56,6 +56,15 @@ namespace FFT {
         std::vector<mint> b(b_begin, b_end);
         if (a_begin == a_end || b_begin == b_end)
             return {};
+
+        if (std::min(a.size(), b.size()) <= 20 || std::max(a.size(), b.size()) <= 64) {
+            std::vector<mint> prod(int(a.size() + b.size()) - 1);
+            for (int i = 0; i < int(a.size()); i++)
+                for (int j = 0; j < int(b.size()); j++)
+                    prod[i + j] += a[i] * b[j];
+            
+            return prod;
+        }
 
         int real_size = int(a.size() + b.size()) - 1;
         int n = 1;
@@ -145,11 +154,18 @@ namespace FFT {
         using mint = static_modular_int<mod>;
 
         int size = std::distance(begin, end);
-        if (size == 0)
-            return std::vector<mint>(degree);
+        assert(size > 0 && *(begin) != 0);
 
-        std::vector<mint> inv{1 / *begin};
-        for (int power = 1; power <= degree; power <<= 1) {
+        std::vector<mint> inv(std::min(degree, 128)), have(inv.size());
+        mint start_inv = 1 / *begin;
+        for (int i = 0; i < int(inv.size()); i++) {
+            inv[i] = ((i == 0 ? 1 : 0) - have[i]) * start_inv;
+            int steps = std::min(size, int(have.size()) - i);
+            for (int j = 0; j < steps; j++)
+                have[i + j] += inv[i] * *(begin + j);
+        }
+
+        for (int power = inv.size(); power < degree; power <<= 1) {
             auto product = multiply<mod>(inv.begin(), inv.end(), begin, begin + std::min(size, 2 * power));
             for (int i = 0; i < std::min<int>(product.size(), 2 * power); i++)
                 product[i] = (i == 0 ? 2 : 0) - product[i];
@@ -175,6 +191,19 @@ namespace FFT {
         if (n < m)
             return {{}, a};
 
+        if (n <= 64 || m <= 20) {
+            std::vector<mint> quotient(n - m + 1);
+            mint inv_b = 1 / b.back();
+            for (int i = n - 1; i >= m - 1; i--) {
+                int pos = i - m + 1;
+                quotient[pos] = a[i] * inv_b;
+                for (int j = 0; j < m; j++)
+                    a[pos + j] -= b[j] * quotient[pos];
+            }
+            normilize(a);
+            return {quotient, a};
+        }
+
         std::reverse(a.begin(), a.end());
         std::reverse(b.begin(), b.end());
         auto inv_b = inverse<mod>(b.begin(), b.end(), n - m + 1);
@@ -194,5 +223,48 @@ namespace FFT {
         
         normilize(remainder);
         return {quotient, remainder};
+    }
+
+    template<int mod, typename T>
+    std::vector<static_modular_int<mod>> multipoint_evaluation(T p_begin, T p_end, T x_begin, T x_end) {
+        using mint = static_modular_int<mod>;
+
+        int n = std::distance(x_begin, x_end);
+        if (n == 0)
+            return {};
+        
+        if (n <= 20 || std::distance(p_begin, p_end) <= 20) {
+            std::vector<mint> eval(n);
+            for (int i = 0; i < n; i++) {
+                mint cur_power = 1;
+                for (auto it = p_begin; it != p_end; it++, cur_power *= *(x_begin + i))
+                    eval[i] += *it * cur_power;
+            }
+            return eval;
+        }
+
+        int tree_size = n;
+        while (tree_size & (tree_size - 1))
+            tree_size++;
+        
+        std::vector<std::vector<mint>> tree(tree_size << 1);
+        std::fill(tree.begin() + tree_size + n, tree.end(), std::vector<mint>{1});
+        for (int i = 0; i < n; i++)
+            tree[tree_size + i] = {-*(x_begin + i), 1};
+        
+        for (int i = tree_size - 1; i >= 1; i--)
+            tree[i] = multiply<mod>(tree[i << 1].begin(), tree[i << 1].end(),
+                                    tree[i << 1 | 1].begin(), tree[i << 1 | 1].end());
+
+        tree[1] = divide<mod>(p_begin, p_end, tree[1].begin(), tree[1].end()).second;
+        for (int i = 2; i < tree_size + n; i++)
+            tree[i] = divide<mod>(tree[i >> 1].begin(), tree[i >> 1].end(),
+                                  tree[i].begin(), tree[i].end()).second;
+
+        std::vector<mint> eval(n);
+        for (int i = 0; i < n; i++)
+            eval[i] = tree[tree_size + i].empty() ? 0 : tree[tree_size + i][0];
+
+        return eval;
     }
 } // namespace FFT
