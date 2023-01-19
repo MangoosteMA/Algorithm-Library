@@ -247,9 +247,11 @@ namespace FFT {
                 }
             }
         }
+
         for (int v = tree_size - 1; v > 0; v--)
             tree[v] = FFT::multiply<MOD>(tree[v << 1].begin(), tree[v << 1].end(),
                                          tree[v << 1 | 1].begin(), tree[v << 1 | 1].end());
+
         tree[1] = divide<MOD>(p_begin, p_end, tree[1].begin(), tree[1].end()).second;
         for (int v = 2; v < 2 * tree_size; v++)
             tree[v] = divide<MOD>(tree[v >> 1].begin(), tree[v >> 1].end(),
