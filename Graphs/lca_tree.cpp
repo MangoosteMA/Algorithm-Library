@@ -6,9 +6,9 @@ struct lca_tree {
     std::vector<std::pair<int, int>> order;
     std::vector<T> depth;
 
-    inline static decltype([](const std::pair<int, int> &a, const std::pair<int, int> &b) -> std::pair<int, int> {
+    inline static auto merge_min = [](const std::pair<int, int> &a, const std::pair<int, int> &b) -> std::pair<int, int> {
         return a < b ? a : b;
-    }) merge_min;
+    };
     using sparse_table_t = sparse_table<std::pair<int, int>, decltype(merge_min)>;
     sparse_table_t sparse;
 
