@@ -102,3 +102,4 @@ void __dbg_out(Head head, Tail... tail) {
 
 #define dprint(...) __dbg_out(__VA_ARGS__)
 #define dbg(...) std::cerr << "#" << __LINE__ << " [" << #__VA_ARGS__ << "]: ", __dbg_out(__VA_ARGS__)
+#define debug if constexpr (true)
