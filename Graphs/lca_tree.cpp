@@ -75,4 +75,8 @@ struct lca_tree {
     T dist(int v, int u) const {
         return depth[v] - 2 * depth[lca(v, u)] + depth[u];
     }
+
+    bool is_ancestor(int v, int u) const {
+        return tin[v] <= tin[u] && tout[u] <= tout[v];
+    }
 };

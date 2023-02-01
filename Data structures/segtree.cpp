@@ -163,7 +163,7 @@ public:
 /*
 struct node {
     node() {}
-    void apply(ll delta, int vl, int vr) {}
+    void apply(..., int vl, int vr) {}
     void push(node &child, int vl, int vr, int cl, int cr) {}
     void clear_after_push() {}
     static node merge(const node &left, const node &right) {}
