@@ -2,7 +2,7 @@ template<typename T>
 struct min_cost_flow {
     struct edge {
         int to, rev;
-        T capasity, cost, flow;
+        T capacity, cost, flow;
     };
 
     int n;
@@ -14,9 +14,9 @@ struct min_cost_flow {
         return n;
     }
 
-    int add(int from, int to, T capasity, T cost) {
+    int add(int from, int to, T capacity, T cost) {
         int id = g[from].size();
-        g[from].push_back({to, int(g[to].size()) + (from == to), capasity, cost, 0});
+        g[from].push_back({to, int(g[to].size()) + (from == to), capacity, cost, 0});
         g[to].push_back({from, id, 0, -cost, 0});
         return id;
     }
@@ -37,8 +37,8 @@ struct min_cost_flow {
             while (true) {
                 bool any = false;
                 for (int v = 0; v < n; v++)
-                    for (const auto &[u, rev, capasity, cost, flow] : g[v])
-                        if (capasity != 0 && potential[v] != INF && potential[v] + cost < potential[u]) {
+                    for (const auto &[u, rev, capacity, cost, flow] : g[v])
+                        if (capacity != 0 && potential[v] != INF && potential[v] + cost < potential[u]) {
                             potential[u] = potential[v] + cost;
                             any = true;
                         }
@@ -65,10 +65,10 @@ struct min_cost_flow {
                 if (cur_dist > dist[v].first)
                     continue;
 
-                for (const auto &[u, rev, capasity, cost, flow] : g[v])
-                    if (potential[u] != INF && cur_dist + cost - potential[u] + potential[v] < dist[u].first && flow < capasity) {
+                for (const auto &[u, rev, capacity, cost, flow] : g[v])
+                    if (potential[u] != INF && cur_dist + cost - potential[u] + potential[v] < dist[u].first && flow < capacity) {
                         parent[u] = {v, rev};
-                        dist[u] = {cur_dist + cost - potential[u] + potential[v], std::min(dist[v].second, capasity - flow)};
+                        dist[u] = {cur_dist + cost - potential[u] + potential[v], std::min(dist[v].second, capacity - flow)};
                         q.push({dist[u].first, u});
                     }
             }

@@ -6,7 +6,7 @@ const ld EPS = 1e-7;
 struct max_flow {
     struct edge {
         int to, rev;
-        ld capasity, flow;
+        ld capacity, flow;
     };
 
     int n;
@@ -15,8 +15,8 @@ struct max_flow {
 
     max_flow(int n) : n(n), g(n), height(n) {}
 
-    void add(int from, int to, ld capasity) {
-        g[from].push_back({to, int(g[to].size()), capasity, 0});
+    void add(int from, int to, ld capacity) {
+        g[from].push_back({to, int(g[to].size()), capacity, 0});
         g[to].push_back({from, int(g[from].size()) -1, 0, 0});
     }
 
@@ -40,7 +40,7 @@ struct max_flow {
         auto push = [&](int v) {
             for (auto &e : g[v])
                 if (height[e.to] == height[v] - 1) {
-                    ld pushed = min(e.capasity - e.flow, excess[v]);
+                    ld pushed = min(e.capacity - e.flow, excess[v]);
                     if (pushed > EPS) {
                         e.flow += pushed;
                         g[e.to][e.rev].flow -= pushed;
@@ -57,7 +57,7 @@ struct max_flow {
             count[height[v]]--;
             height[v] = n;
             for (auto &e : g[v])
-                if (e.flow + EPS < e.capasity)
+                if (e.flow + EPS < e.capacity)
                     height[v] = min(height[v], height[e.to] + 1);
 
             activate(v);
@@ -65,7 +65,7 @@ struct max_flow {
         };
 
         for (auto &e : g[source])
-            excess[source] += e.capasity;
+            excess[source] += e.capacity;
 
         activate(source);
         while (layer >= 0) {

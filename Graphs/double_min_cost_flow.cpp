@@ -4,7 +4,7 @@ struct min_cost_flow {
 
     struct edge {
         int to, rev;
-        T capasity, cost, flow;
+        T capacity, cost, flow;
     };
 
     int n;
@@ -16,15 +16,15 @@ struct min_cost_flow {
         return n;
     }
 
-    int add(int from, int to, T forward_capasity, T backward_capasity, T cost) {
+    int add(int from, int to, T forward_capacity, T backward_capacity, T cost) {
         int id = g[from].size();
-        g[from].push_back({to, int(g[to].size()) + (from == to), forward_capasity, cost, 0});
-        g[to].push_back({from, id, backward_capasity, -cost, 0});
+        g[from].push_back({to, int(g[to].size()) + (from == to), forward_capacity, cost, 0});
+        g[to].push_back({from, id, backward_capacity, -cost, 0});
         return id;
     }
 
-    int add(int from, int to, T capasity, T cost) {
-        return add(from, to, capasity, 0, cost);
+    int add(int from, int to, T capacity, T cost) {
+        return add(from, to, capacity, 0, cost);
     }
 
     std::pair<T, T> solve(int source, int sink, T flow_limit = std::numeric_limits<T>::max()) {
@@ -43,8 +43,8 @@ struct min_cost_flow {
             while (true) {
                 bool any = false;
                 for (int v = 0; v < n; v++)
-                    for (const auto &[u, rev, capasity, cost, flow] : g[v])
-                        if (abs(capasity) > EPS && potential[v] != INF && potential[v] + cost < potential[u]) {
+                    for (const auto &[u, rev, capacity, cost, flow] : g[v])
+                        if (abs(capacity) > EPS && potential[v] != INF && potential[v] + cost < potential[u]) {
                             potential[u] = potential[v] + cost;
                             any = true;
                         }
@@ -71,10 +71,10 @@ struct min_cost_flow {
                 if (cur_dist > dist[v].first)
                     continue;
 
-                for (const auto &[u, rev, capasity, cost, flow] : g[v])
-                    if (cur_dist + cost - potential[u] + potential[v] < dist[u].first && flow + EPS < capasity) {
+                for (const auto &[u, rev, capacity, cost, flow] : g[v])
+                    if (cur_dist + cost - potential[u] + potential[v] < dist[u].first && flow + EPS < capacity) {
                         parent[u] = {v, rev};
-                        dist[u] = {cur_dist + cost - potential[u] + potential[v], std::min(dist[v].second, capasity - flow)};
+                        dist[u] = {cur_dist + cost - potential[u] + potential[v], std::min(dist[v].second, capacity - flow)};
                         q.push({dist[u].first, u});
                     }
             }

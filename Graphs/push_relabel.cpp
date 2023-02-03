@@ -2,7 +2,7 @@ template<typename T>
 struct push_relabel {
     struct edge {
         int to, rev;
-        T capasity, flow;
+        T capacity, flow;
     };
 
     int n;
@@ -15,10 +15,10 @@ struct push_relabel {
         return n;
     }
 
-    int add(int from, int to, T forward_capasity, T backward_capasity = 0) {
+    int add(int from, int to, T forward_capacity, T backward_capacity = 0) {
         int id = g[from].size();
-        g[from].push_back({to, int(g[to].size()) + (from == to), forward_capasity, 0});
-        g[to].push_back({from, id, backward_capasity, 0});
+        g[from].push_back({to, int(g[to].size()) + (from == to), forward_capacity, 0});
+        g[to].push_back({from, id, backward_capacity, 0});
         return id;
     }
 
@@ -48,7 +48,7 @@ struct push_relabel {
         auto push = [&](int v) {
             for (auto &e : g[v])
                 if (height[e.to] == height[v] - 1) {
-                    T pushed = std::min<U>(e.capasity - e.flow, excess[v]);
+                    T pushed = std::min<U>(e.capacity - e.flow, excess[v]);
                     if (pushed > 0) {
                         e.flow += pushed;
                         g[e.to][e.rev].flow -= pushed;
@@ -65,7 +65,7 @@ struct push_relabel {
             count[height[v]]--;
             height[v] = n;
             for (auto &e : g[v])
-                if (e.flow < e.capasity)
+                if (e.flow < e.capacity)
                     height[v] = std::min(height[v], height[e.to] + 1);
 
             activate(v);
@@ -73,7 +73,7 @@ struct push_relabel {
         };
 
         for (auto &e : g[source])
-            excess[source] += e.capasity;
+            excess[source] += e.capacity;
 
         activate(source);
         while (layer >= 0) {

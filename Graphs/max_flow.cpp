@@ -3,7 +3,7 @@ template<typename T>
 struct max_flow {
     struct edge {
         int to, rev;
-        T capasity, flow;
+        T capacity, flow;
     };
 
     int n;
@@ -15,10 +15,10 @@ struct max_flow {
         return n;
     }
 
-    int add(int from, int to, T forward_capasity, T backward_capasity = 0) {
+    int add(int from, int to, T forward_capacity, T backward_capacity = 0) {
         int id = g[from].size();
-        g[from].push_back({to, int(g[to].size()) + (from == to), forward_capasity, 0});
-        g[to].push_back({from, id, backward_capasity, 0});
+        g[from].push_back({to, int(g[to].size()) + (from == to), forward_capacity, 0});
+        g[to].push_back({from, id, backward_capacity, 0});
         return id;
     }
 
@@ -31,8 +31,8 @@ struct max_flow {
         std::vector<int> que{source};
         for (int ptr = 0; ptr < int(que.size()); ptr++) {
             int v = que[ptr];
-            for (const auto &[u, rev, capasity, flow] : g[v])
-                if (dist[u] > dist[v] + 1 && flow < capasity) {
+            for (const auto &[u, rev, capacity, flow] : g[v])
+                if (dist[u] > dist[v] + 1 && flow < capacity) {
                     dist[u] = dist[v] + 1;
                     que.push_back(u);
                 }
@@ -45,9 +45,9 @@ struct max_flow {
             return min_delta;
 
         for (; head[v] < int(g[v].size()); head[v]++) {
-            auto &[u, rev, capasity, flow] = g[v][head[v]];
-            if (dist[u] == dist[v] + 1 && flow < capasity) {
-                if (T delta = dfs(u, std::min(min_delta, capasity - flow))) {
+            auto &[u, rev, capacity, flow] = g[v][head[v]];
+            if (dist[u] == dist[v] + 1 && flow < capacity) {
+                if (T delta = dfs(u, std::min(min_delta, capacity - flow))) {
                     flow += delta;
                     g[u][rev].flow -= delta;
                     return delta;
@@ -81,7 +81,7 @@ template<typename T>
 struct max_flow {
     struct edge {
         int to, rev;
-        T capasity, flow;
+        T capacity, flow;
     };
 
     int n;
@@ -93,10 +93,10 @@ struct max_flow {
         return n;
     }
 
-    int add(int from, int to, T forward_capasity, T backward_capasity = 0) {
+    int add(int from, int to, T forward_capacity, T backward_capacity = 0) {
         int id = g[from].size();
-        g[from].push_back({to, int(g[to].size()) + (from == to), forward_capasity, 0});
-        g[to].push_back({from, id, backward_capasity, 0});
+        g[from].push_back({to, int(g[to].size()) + (from == to), forward_capacity, 0});
+        g[to].push_back({from, id, backward_capacity, 0});
         return id;
     }
 
@@ -110,8 +110,8 @@ struct max_flow {
         std::vector<int> que{source};
         for (int ptr = 0; ptr < int(que.size()); ptr++) {
             int v = que[ptr];
-            for (const auto &[u, rev, capasity, flow] : g[v])
-                if (dist[u] > dist[v] + 1 && capasity - flow >= smallest) {
+            for (const auto &[u, rev, capacity, flow] : g[v])
+                if (dist[u] > dist[v] + 1 && capacity - flow >= smallest) {
                     dist[u] = dist[v] + 1;
                     que.push_back(u);
                 }
@@ -124,9 +124,9 @@ struct max_flow {
             return min_delta;
 
         for (; head[v] < int(g[v].size()); head[v]++) {
-            auto &[u, rev, capasity, flow] = g[v][head[v]];
-            if (dist[u] == dist[v] + 1 && capasity - flow >= smallest) {
-                if (T delta = dfs(u, std::min(min_delta, capasity - flow))) {
+            auto &[u, rev, capacity, flow] = g[v][head[v]];
+            if (dist[u] == dist[v] + 1 && capacity - flow >= smallest) {
+                if (T delta = dfs(u, std::min(min_delta, capacity - flow))) {
                     flow += delta;
                     g[u][rev].flow -= delta;
                     return delta;
@@ -164,7 +164,7 @@ template<typename T, typename U>
 struct max_flow {
     struct edge {
         int to;
-        T capasity, flow;
+        T capacity, flow;
     };
 
     int n;
@@ -173,12 +173,12 @@ struct max_flow {
 
     max_flow(int n = 0) : n(n), g(n) {}
 
-    int add(int from, int to, T forward_capasity, T backward_capasity = 0) {
+    int add(int from, int to, T forward_capacity, T backward_capacity = 0) {
         int id = edges.size();
         g[from].push_back(edges.size());
-        edges.push_back({to, forward_capasity, 0});
+        edges.push_back({to, forward_capacity, 0});
         g[to].push_back(edges.size());
-        edges.push_back({from, backward_capasity, 0});
+        edges.push_back({from, backward_capacity, 0});
         return id;
     }
 
@@ -193,7 +193,7 @@ struct max_flow {
         for (int ptr = 0; ptr < int(que.size()); ptr++) {
             int v = que[ptr];
             for (auto i : g[v])
-                if (edges[i].flow < edges[i].capasity && dist[edges[i].to] == n) {
+                if (edges[i].flow < edges[i].capacity && dist[edges[i].to] == n) {
                     dist[edges[i].to] = dist[v] + 1;
                     que.push_back(edges[i].to);
                 }
@@ -212,11 +212,11 @@ struct max_flow {
         for (auto i : new_g[v]) {
             int u = edges[i].to;
             if (dist[u] == dist[v] - 1 && !removed[u]) {
-                tot_out[u] -= edges[i ^ 1].capasity - edges[i ^ 1].flow;
+                tot_out[u] -= edges[i ^ 1].capacity - edges[i ^ 1].flow;
                 if (tot_out[u] == 0)
                     remove(u);
             } else if (dist[u] == dist[v] + 1 && !removed[u]) {
-                tot_in[u] -= edges[i].capasity - edges[i].flow;
+                tot_in[u] -= edges[i].capacity - edges[i].flow;
                 if (tot_in[u] == 0)
                     remove(u);
             }
@@ -231,8 +231,8 @@ struct max_flow {
         U tot_pushed = 0;
         for (; forward_head[v] < int(new_g[v].size()); forward_head[v]++) {
             int i = new_g[v][forward_head[v]], u = edges[i].to;
-            if (dist[u] == dist[v] + 1 && edges[i].flow < edges[i].capasity && !removed[u]) {
-                T pushed = push_forward(u, std::min<U>(to_push - tot_pushed, edges[i].capasity - edges[i].flow));
+            if (dist[u] == dist[v] + 1 && edges[i].flow < edges[i].capacity && !removed[u]) {
+                T pushed = push_forward(u, std::min<U>(to_push - tot_pushed, edges[i].capacity - edges[i].flow));
                 tot_pushed += pushed;
 
                 edges[i].flow += pushed;
@@ -255,8 +255,8 @@ struct max_flow {
         U tot_pushed = 0;
         for (; backward_head[v] < int(new_g[v].size()); backward_head[v]++) {
             int i = new_g[v][backward_head[v]], u = edges[i].to;
-            if (dist[u] == dist[v] - 1 && edges[i ^ 1].flow < edges[i ^ 1].capasity && !removed[u]) {
-                T pushed = push_backward(u, std::min<U>(to_push - tot_pushed, edges[i ^ 1].capasity - edges[i ^ 1].flow));
+            if (dist[u] == dist[v] - 1 && edges[i ^ 1].flow < edges[i ^ 1].capacity && !removed[u]) {
+                T pushed = push_backward(u, std::min<U>(to_push - tot_pushed, edges[i ^ 1].capacity - edges[i ^ 1].flow));
                 tot_pushed += pushed;
 
                 edges[i ^ 1].flow += pushed;
@@ -298,10 +298,10 @@ struct max_flow {
                     continue;
 
                 for (auto i : g[v])
-                    if (dist[edges[i].to] == dist[v] - 1 && edges[i ^ 1].flow < edges[i ^ 1].capasity) {
+                    if (dist[edges[i].to] == dist[v] - 1 && edges[i ^ 1].flow < edges[i ^ 1].capacity) {
                         removed[edges[i].to] = false;
-                        tot_out[edges[i].to] += edges[i ^ 1].capasity - edges[i ^ 1].flow;
-                        tot_in[v] += edges[i ^ 1].capasity - edges[i ^ 1].flow;
+                        tot_out[edges[i].to] += edges[i ^ 1].capacity - edges[i ^ 1].flow;
+                        tot_in[v] += edges[i ^ 1].capacity - edges[i ^ 1].flow;
                         new_g[v].push_back(i);
                         new_g[edges[i].to].push_back(i ^ 1);
                     }
