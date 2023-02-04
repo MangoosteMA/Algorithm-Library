@@ -268,4 +268,48 @@ namespace FFT {
         }
         return eval;
     }
+
+    // returns log(p) modulo x^degree
+    template<int mod, typename T>
+    std::vector<static_modular_int<mod>> log(T begin, T end, int degree) {
+        using mint = static_modular_int<mod>;
+
+        std::vector<mint> p(begin, end), pp = p;
+        assert(!p.empty() && p[0] == 1);
+        for (int i = 0; i + 1 < int(pp.size()); i++)
+            pp[i] = pp[i + 1] * (i + 1);
+
+        pp.pop_back();
+        std::vector<mint> inv_p = inverse<mod>(p.begin(), p.end(), degree);
+        std::vector<mint> prod = multiply<mod>(pp.begin(), pp.end(), inv_p.begin(), inv_p.end());
+        prod.resize(degree);
+        for (int i = degree - 1; i > 0; i--)
+            prod[i] = prod[i - 1] / i;
+
+        prod[0] = 0;
+        return prod;
+    }
+
+    // returns exp(p) modulo x^degree
+    template<int mod, typename T>
+    std::vector<static_modular_int<mod>> exp(T begin, T end, int degree) {
+        using mint = static_modular_int<mod>;
+
+        std::vector<mint> p(begin, end), exp{1};
+        while (int(exp.size()) < degree) {
+            std::vector<mint> lg = log<mod>(exp.begin(), exp.end(), 2 * exp.size());
+            std::vector<mint> cur(2 * exp.size());
+            cur[0] = 1;
+            for (int i = 0; i < int(2 * exp.size()); i++) {
+                cur[i] -= lg[i];
+                if (i < int(p.size()))
+                    cur[i] += p[i];
+            }
+            std::vector<mint> new_exp = multiply<mod>(exp.begin(), exp.end(), cur.begin(), cur.end());
+            new_exp.resize(2 * exp.size());
+            exp.swap(new_exp);
+        }
+        exp.resize(degree);
+        return exp;
+    }
 } // namespace FFT
