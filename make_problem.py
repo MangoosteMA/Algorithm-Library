@@ -72,7 +72,7 @@ system(f'cp ~/Programming/Templates/debug.h {path}/{dir_name}/.')
 system(f'mkdir {path}/{dir_name}/.vscode')
 system(f'cp ~/Library/Application\ Support/Code/User/settings.json {path}/{dir_name}/.vscode/settings.json')
 # system(f'cp ~/Library/Application\ Support/Code/User/tasks.json {path}/{dir_name}/.vscode/tasks.json')
-system(f'cp ~/Library/Application\ Support/Code/User/launch.json {path}/{dir_name}/.vscode/launch.json')
+# system(f'cp ~/Library/Application\ Support/Code/User/launch.json {path}/{dir_name}/.vscode/launch.json')
 
 if simple_initialize:
     print('Done!')
