@@ -43,6 +43,7 @@ struct lca_tree {
     void build(int root = 0) {
         tin.resize(n);
         tout.resize(n);
+        order.clear();
         order.reserve(n - 1);
         depth.resize(n);
         int timer = 0;
