@@ -19,7 +19,7 @@ struct Point {
     Point(const Point<A> &pt) : x(pt.x), y(pt.y) {}
 
     template<typename A = double>
-    Point<A> normilized(A len = 1) const {
+    Point<A> normalized(A len = 1) const {
         Point<A> result(*this);
         result.x *= len / length<A>();
         result.y *= len / length<A>();
@@ -98,7 +98,7 @@ struct Line {
     template<typename A>
     Line(const Line<A> &ln) : a(ln.a), b(ln.b), c(ln.c), anyPoint(ln.anyPoint) {}
 
-    void normilize() {
+    void normalize() {
         if (a < 0 || (a == 0 && b < 0))
             a *= -1, b *= -1, c *= -1;
 
@@ -106,7 +106,7 @@ struct Line {
         a /= g, b /= g, c /= g;
     }
 
-    Line normilized() const {
+    Line normalized() const {
         Line result = *this;
         if (a < 0 || (a == 0 && b < 0))
             result.a *= -1, result.b *= -1, result.c *= -1;
@@ -117,14 +117,14 @@ struct Line {
     }
 
     bool operator==(const Line &ln) const {
-        auto current = normilized();
-        ln.normilize();
+        auto current = normalized();
+        ln.normalize();
         return current.a == ln.a && current.b == ln.b && current.c == ln.c;
     }
 
     bool operator<(const Line &ln) const {
-        Line tmp = normilized();
-        ln.normilize();
+        Line tmp = normalized();
+        ln.normalize();
         return std::array<T, 3>{tmp.a, tmp.b, tmp.c} < std::array<T, 3>{ln.a, ln.b, ln.c};
     }
 
@@ -353,14 +353,14 @@ struct ConvexPolygon {
     ConvexPolygon() {}
     ConvexPolygon(int n) : pol(n) {}
     ConvexPolygon(const std::vector<Point<T>> &points) : pol(points) {
-        normilize();
+        normalize();
     }
 
     void rotate() {
         std::rotate(pol.begin(), min_element(pol.begin(), pol.end()), pol.end());
     }
 
-    void normilize() {
+    void normalize() {
         std::sort(pol.begin(), pol.end());
         pol.resize(unique(pol.begin(), pol.end()) - pol.begin());
         if (empty())
@@ -597,7 +597,7 @@ struct ConvexPolygon {
         for (auto &pt : pol.pol)
             in >> pt;
 
-        pol.normilize();
+        pol.normalize();
         return in;
     }
 

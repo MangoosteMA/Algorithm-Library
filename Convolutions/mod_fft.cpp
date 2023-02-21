@@ -1,6 +1,6 @@
 namespace FFT {
     template<typename T>
-    void normilize(T &poly) {
+    void normalize(T &poly) {
         while (!poly.empty() && poly.back() == 0)
             poly.pop_back();
     }
@@ -185,7 +185,7 @@ namespace FFT {
         using mint = static_modular_int<mod>;
 
         std::vector<mint> a(a_begin, a_end), b(b_begin, b_end);
-        normilize(a), normilize(b);
+        normalize(a), normalize(b);
         assert(!b.empty());
         int n = int(a.size()), m = int(b.size());
         if (n < m)
@@ -200,7 +200,7 @@ namespace FFT {
                 for (int j = 0; j < m; j++)
                     a[pos + j] -= b[j] * quotient[pos];
             }
-            normilize(a);
+            normalize(a);
             return {quotient, a};
         }
 
@@ -210,7 +210,7 @@ namespace FFT {
         auto quotient = multiply<mod>(a.begin(), a.end(), inv_b.begin(), inv_b.end());
         quotient.resize(n - m + 1);
         std::reverse(quotient.begin(), quotient.end());
-        normilize(quotient);
+        normalize(quotient);
 
         std::reverse(a.begin(), a.end());
         std::reverse(b.begin(), b.end());
@@ -221,7 +221,7 @@ namespace FFT {
         for (int i = 0; i < m; i++)
             remainder[i] = a[i] - product[i];
         
-        normilize(remainder);
+        normalize(remainder);
         return {quotient, remainder};
     }
 

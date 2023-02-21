@@ -127,7 +127,7 @@ namespace FFT {
     }
 
     template<typename T>
-    std::vector<T> normilize(std::vector<T> pol) {
+    std::vector<T> normalize(std::vector<T> pol) {
         while (!pol.empty() && pol.back() == 0)
             pol.pop_back();
 
