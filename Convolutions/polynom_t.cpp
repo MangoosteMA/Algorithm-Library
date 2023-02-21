@@ -16,13 +16,12 @@ private:
 public:
     template<typename V>
     polynom_t(const std::initializer_list<V> &lst) : std::vector<T>(lst.begin(), lst.end()) {}
-
     template<typename... Args>
     polynom_t(Args&&... args) : std::vector<T>(std::forward<Args>(args)...) {}
 
     polynom_t<mod>& resize(int n);
     void normalize();
-    int degree() const; // returns -1 if all coefficients are zeroes
+    int degree() const; // returns -1 if all coefficients are zeroes (not O(1)!)
     T eval(const T &x) const;
 
     polynom_t<mod> operator-() const;
@@ -37,6 +36,7 @@ public:
     polynom_t<mod> inv(int degree) const; // returns p^{-1} modulo x^{degree}
     polynom_t<mod> log(int degree) const; // returns log(p) modulo x^{degree}
     polynom_t<mod> exp(int degree) const; // returns exp(p) modulo x^{degree}
+    polynom_t<mod> power(int64_t d, int degree) const; // returns p^{d} modulo x^{degree}
 
     template<typename V> requires (!std::is_same_v<V, polynom_t<mod>>) polynom_t<mod>& operator*=(const V &value);
     template<typename V> requires (!std::is_same_v<V, polynom_t<mod>>) polynom_t<mod>& operator/=(const V &value);
@@ -101,7 +101,7 @@ int polynom_t<mod>::degree() const {
     int deg = int(size()) - 1;
     while (deg >= 0 && (*this)[deg] == T(0))
         deg--;
-    
+
     return deg;
 }
 
@@ -110,7 +110,7 @@ typename polynom_t<mod>::T polynom_t<mod>::eval(const T &x) const {
     T power = 1, value = 0;
     for (int i = 0; i < int(size()); i++, power *= x)
         value += (*this)[i] * power;
-    
+
     return value;
 }
 
@@ -227,7 +227,7 @@ polynom_t<mod> polynom_t<mod>::derivative() const {
     polynom_t<mod> der(std::max(0, int(size()) - 1));
     for (int i = 0; i < int(der.size()); i++)
         der[i] = T(i + 1) * (*this)[i + 1];
-    
+
     return der;
 }
 
@@ -237,7 +237,7 @@ polynom_t<mod> polynom_t<mod>::integral(const T &constant) const {
     in[0] = constant;
     for (int i = 1; i < int(in.size()); i++)
         in[i] = (*this)[i - 1] / T(i);
-    
+
     return in;
 }
 
@@ -281,11 +281,34 @@ polynom_t<mod> polynom_t<mod>::exp(int degree) const {
 }
 
 template<int mod>
+polynom_t<mod> polynom_t<mod>::power(int64_t d, int degree) const {
+    if (!d || !degree)
+        return polynom_t<mod>{1}.resize(degree);
+
+    int pos = 0;
+    while (pos < int(size()) && (*this)[pos] == T(0))
+        pos++;
+
+    if (pos == int(size()) || pos >= (degree + d - 1) / d)
+        return polynom_t<mod>(degree);
+
+    int coeffs_left = degree - d * pos;
+    polynom_t<mod> result = ((polynom_t<mod>(begin() + pos, end()) / (*this)[pos]).log(coeffs_left)
+                          * T(d)).exp(coeffs_left) * (*this)[pos].power(d);
+    result.resize(degree);
+    for (int i = degree - 1; i - (degree - coeffs_left) >= 0; i--)
+        result[i] = result[i - (degree - coeffs_left)];
+
+    std::fill(result.begin(), result.end() - coeffs_left, T(0));
+    return result;
+}
+
+template<int mod>
 template<typename V> requires (!std::is_same_v<V, polynom_t<mod>>)
 polynom_t<mod>& polynom_t<mod>::operator*=(const V &value) {
     for (auto &x : *this)
         x *= value;
-    
+
     return *this;
 }
 
@@ -294,7 +317,7 @@ template<typename V> requires (!std::is_same_v<V, polynom_t<mod>>)
 polynom_t<mod>& polynom_t<mod>::operator/=(const V &value) {
     for (auto &x : *this)
         x /= value;
-    
+
     return *this;
 }
 
