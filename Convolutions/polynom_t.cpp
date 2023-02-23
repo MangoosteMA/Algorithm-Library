@@ -11,6 +11,12 @@ public:
     using std::vector<T>::end;
 
 private:
+    static constexpr int MUL_MIN_CUT = 20;
+    static constexpr int MUL_MAX_CUT = 1 << 6;
+    static constexpr int DIV_N_CUT = 1 << 7;
+    static constexpr int DIV_M_CUT = 1 << 6;
+    static constexpr int INV_BRUTE_FORCE_SIZE = 128;
+
     static void fft(polynom_t<mod> &a);
 
 public:
@@ -148,10 +154,8 @@ polynom_t<mod>& polynom_t<mod>::operator*=(const polynom_t<mod> &another) {
         return *this;
     }
 
-    static constexpr int SIZE_MIN_CUT = 20;
-    static constexpr int SIZE_MAX_CUT = 64;
-    if (std::min(size(), another.size()) <= SIZE_MIN_CUT
-        || std::max(size(), another.size()) <= SIZE_MAX_CUT) {
+    if (std::min(size(), another.size()) <= MUL_MIN_CUT
+        || std::max(size(), another.size()) <= MUL_MAX_CUT) {
         polynom_t<mod> product(int(size() + another.size()) - 1);
         for (int i = 0; i < int(size()); i++)
             for (int j = 0; j < int(another.size()); j++)
@@ -191,9 +195,7 @@ polynom_t<mod>& polynom_t<mod>::operator/=(const polynom_t &another) {
     if (n < m)
         return *this = {};
 
-    static constexpr int N_CUT = 128;
-    static constexpr int M_CUT = 64;
-    if (n <= N_CUT || m <= M_CUT) {
+    if (n <= DIV_N_CUT || m <= DIV_M_CUT) {
         polynom_t<mod> quotient(n - m + 1);
         T inv_b = T(1) / b.back();
         for (int i = n - 1; i >= m - 1; i--) {
@@ -244,8 +246,7 @@ polynom_t<mod> polynom_t<mod>::integral(const T &constant) const {
 template<int mod>
 polynom_t<mod> polynom_t<mod>::inv(int degree) const {
     assert(!empty() && (*this)[0] != T(0) && "polynom is not invertable");
-    static constexpr int BRUTE_FORCE_SIZE = 128;
-    polynom_t<mod> inv(std::min(degree, BRUTE_FORCE_SIZE)), have(inv.size());
+    polynom_t<mod> inv(std::min(degree, INV_BRUTE_FORCE_SIZE)), have(inv.size());
     T start_inv = T(1) / (*this)[0];
     for (int i = 0; i < int(inv.size()); i++) {
         inv[i] = ((i == 0 ? T(1) : T(0)) - have[i]) * start_inv;
