@@ -15,7 +15,7 @@ private:
     static constexpr int MUL_MAX_CUT = 1 << 6;
     static constexpr int DIV_N_CUT = 1 << 7;
     static constexpr int DIV_M_CUT = 1 << 6;
-    static constexpr int INV_BRUTE_FORCE_SIZE = 128;
+    static constexpr int INV_BRUTE_FORCE_SIZE = 1 << 7;
 
     static void fft(polynom_t<mod> &a);
 
