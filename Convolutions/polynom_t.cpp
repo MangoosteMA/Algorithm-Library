@@ -11,6 +11,7 @@ public:
     using std::vector<T>::end;
 
 private:
+    static constexpr int EVAL_N = 1 << 5;
     static constexpr int MUL_MIN_CUT = 20;
     static constexpr int MUL_MAX_CUT = 1 << 6;
     static constexpr int DIV_N_CUT = 1 << 7;
@@ -29,6 +30,7 @@ public:
     void normalize();
     int degree() const; // returns -1 if all coefficients are zeroes (not O(1)!)
     T eval(const T &x) const;
+    std::vector<T> multipoint_evaluation(const std::vector<T> &points) const;
 
     polynom_t<mod> operator-() const;
     polynom_t<mod>& operator+=(const polynom_t<mod> &another);
@@ -118,6 +120,40 @@ typename polynom_t<mod>::T polynom_t<mod>::eval(const T &x) const {
         value += (*this)[i] * power;
 
     return value;
+}
+
+template<int mod>
+std::vector<typename polynom_t<mod>::T> polynom_t<mod>::multipoint_evaluation(const std::vector<T> &points) const {
+    const int n = points.size();
+    if (n == 0)
+        return {};
+
+    const int tree_size = (n + EVAL_N - 1) / EVAL_N;
+    std::vector<polynom_t<mod>> tree(tree_size << 1);
+    for (int v = 0; v < tree_size; v++) {
+        int from = v * EVAL_N, to = std::min(n, from + EVAL_N);
+        tree[tree_size + v].resize(to - from + 1);
+        tree[tree_size + v][0] = 1;
+        for (int i = from; i < to; i++) {
+            for (int j = i - from; j >= 0; j--) {
+                tree[tree_size + v][j + 1] += tree[tree_size + v][j];
+                tree[tree_size + v][j] *= -points[i];
+            }
+        }
+    }
+    for (int v = tree_size - 1; v > 0; v--)
+        tree[v] = tree[v << 1] * tree[v << 1 | 1];
+
+    tree[1] = (*this) % tree[1];
+    for (int v = 2; v < 2 * tree_size; v++)
+        tree[v] = tree[v >> 1] % tree[v];
+
+    std::vector<T> eval(n);
+    for (int v = 0; v < tree_size; v++)
+        for (int i = v * EVAL_N; i < std::min(n, (v + 1) * EVAL_N); i++)
+            eval[i] = tree[tree_size + v].eval(points[i]);
+
+    return eval;
 }
 
 template<int mod>
