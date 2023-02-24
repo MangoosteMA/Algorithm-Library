@@ -1,14 +1,8 @@
 template<typename T>
 int normalize(T value, int mod) {
-    if (value < -mod || value >= 2 * mod)
-        value %= mod;
-
-    if (value < 0)
-        value += mod;
-
-    if (value >= mod)
-        value -= mod;
-
+    if (value < -mod || value >= 2 * mod) value %= mod;
+    if (value < 0) value += mod;
+    if (value >= mod) value -= mod;
     return value;
 }
 
@@ -27,9 +21,7 @@ struct static_modular_int {
     template<typename T>
     mint power(T degree) const {
         degree = normalize(degree, mod - 1);
-        mint prod = 1;
-        mint a = *this;
-
+        mint prod = 1, a = *this;
         for (; degree > 0; degree >>= 1, a *= a)
             if (degree & 1)
                 prod *= a;
@@ -48,22 +40,18 @@ struct static_modular_int {
 
     mint& operator+=(const mint &x) {
         value += x.value;
-        if (value >= mod)
-            value -= mod;
-
+        if (value >= mod) value -= mod;
         return *this;
     }
 
     mint& operator-=(const mint &x) {
         value -= x.value;
-        if (value < 0)
-            value += mod;
-
+        if (value < 0) value += mod;
         return *this;
     }
 
     mint& operator*=(const mint &x) {
-        value = (long long) value * x.value % mod;
+        value = int64_t(value) * x.value % mod;
         return *this;
     }
 
@@ -89,35 +77,27 @@ struct static_modular_int {
 
     mint& operator++() {
         ++value;
-        if (value == mod)
-            value = 0;
-
+        if (value == mod) value = 0;
         return *this;
     }
 
     mint& operator--() {
         --value;
-        if (value == -1)
-            value = mod - 1;
-
+        if (value == -1) value = mod - 1;
         return *this;
     }
 
     mint operator++(int) {
         mint prev = *this;
         value++;
-        if (value == mod)
-            value = 0;
-
+        if (value == mod) value = 0;
         return prev;
     }
 
     mint operator--(int) {
         mint prev = *this;
         value--;
-        if (value == -1)
-            value = mod - 1;
-
+        if (value == -1) value = mod - 1;
         return prev;
     }
 
@@ -157,14 +137,9 @@ struct static_modular_int {
     }
 
     static int primitive_root() {
-        if constexpr (mod == 1'000'000'007)
-            return 5;
-
-        if constexpr (mod == 998'244'353)
-            return 3;
-
-        if constexpr (mod == 786433)
-            return 10;
+        if constexpr (mod == 1'000'000'007) return 5;
+        if constexpr (mod == 998'244'353) return 3;
+        if constexpr (mod == 786433) return 10;
 
         static int root = -1;
         if (root != -1)
@@ -179,19 +154,16 @@ struct static_modular_int {
                     value /= i;
             }
 
-        if (value != 1)
-            primes.push_back(value);
-
+        if (value != 1) primes.push_back(value);
         for (int r = 2;; r++) {
             bool ok = true;
-            for (auto p : primes)
+            for (auto p : primes) {
                 if ((mint(r).power((mod - 1) / p)).value == 1) {
                     ok = false;
                     break;
                 }
-
-            if (ok)
-                return root = r;
+            }
+            if (ok) return root = r;
         }
     }
 };
