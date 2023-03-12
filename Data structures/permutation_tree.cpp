@@ -132,6 +132,6 @@ public:
                 total += T(g[i].size() + 1) * T(g[i].size()) / 2 - T(g[i].size()) - 1;
             }
         }
-        return size() == 1 ? 1 : total;
+        return total;
     }
 };
