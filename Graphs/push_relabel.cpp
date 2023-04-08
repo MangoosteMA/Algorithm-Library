@@ -1,5 +1,3 @@
-// TODO: add edge-pointer for each node
-
 template<typename T>
 struct push_relabel {
     struct edge {
@@ -34,54 +32,35 @@ struct push_relabel {
                 e.flow = 0;
 
         std::fill(height.begin(), height.end(), 0);
-        std::vector<int> count(n + 1);
-        count[0] = n;
+        height[source] = n;
+        std::vector<int> count(2 * n);
+        count[0] = n - 1;
+
         std::vector<U> excess(n);
         std::vector<bool> activated(n);
         activated[sink] = true;
-        std::vector<std::vector<int>> layers(n);
-        int layer = 0;
+        std::vector<std::vector<int>> layers(2 * n);
+        std::vector<int> edge_ptr(n);
 
-        auto activate = [&](int v) {
-            if (!activated[v] && excess[v] > 0 && height[v] < n) {
-                layer = std::max(layer, height[v]);
-                layers[height[v]].push_back(v);
-                activated[v] = true;
+        auto add_flow = [&](edge &e, const T &pushed) {
+            if (pushed == 0)
+                return;
+
+            excess[e.to] += pushed;
+            e.flow += pushed;
+            auto &back = g[e.to][e.rev];
+            back.flow -= pushed;
+            excess[back.to] -= pushed;
+            if (!activated[e.to]) {
+                activated[e.to] = true;
+                layers[height[e.to]].push_back(e.to);
             }
         };
 
-        auto push = [&](int v) {
-            for (auto &e : g[v])
-                if (height[e.to] == height[v] - 1) {
-                    T pushed = std::min<U>(e.capacity - e.flow, excess[v]);
-                    if (pushed > 0) {
-                        e.flow += pushed;
-                        g[e.to][e.rev].flow -= pushed;
-                        excess[v] -= pushed;
-                        excess[e.to] += pushed;
-                        activate(e.to);
-                        if (excess[v] == 0)
-                            break;
-                    }
-                }
-        };
-
-        auto relabel = [&](int v) {
-            count[height[v]]--;
-            height[v] = n;
-            for (auto &e : g[v])
-                if (e.flow < e.capacity)
-                    height[v] = std::min(height[v], height[e.to] + 1);
-
-            activate(v);
-            count[height[v]]++;
-        };
-
         for (auto &e : g[source])
-            excess[source] += e.capacity;
+            add_flow(e, e.capacity);
 
-        activate(source);
-        while (layer >= 0) {
+        for (int layer = 0; layer >= 0;) {
             if (layers[layer].empty()) {
                 layer--;
                 continue;
@@ -91,27 +70,40 @@ struct push_relabel {
             layers[layer].pop_back();
             activated[v] = false;
 
-            push(v);
-            if (excess[v] > 0) {
-                if (count[height[v]] == 1) {
-                    int cur = height[v];
-                    for (int u = 0; u < n; u++)
-                        if (height[u] >= cur) {
-                            count[height[u]]--;
-                            height[u] = n;
-                            count[height[u]]++;
+            while (excess[v] > 0) {
+                if (edge_ptr[v] == int(g[v].size())) {
+                    edge_ptr[v] = 0;
+                    height[v] = 2 * n - 1;
+                    for (auto &e : g[v])
+                        if (e.flow < e.capacity)
+                            height[v] = std::min(height[v], height[e.to] + 1);
+
+                    count[layer]--;
+                    count[height[v]]++;
+                    if (count[layer] == 0 && layer < n) {
+                        for (int u = 0; u < n; u++) {
+                            if (layer < height[u] && height[u] < n) {
+                                count[height[u]]--;
+                                height[u] = n + 1;
+                            }
                         }
+                    }
+                    layer = height[v];
+                    continue;
+                }
+
+                auto &e = g[v][edge_ptr[v]];
+                if (height[e.to] == height[v] - 1 && e.flow < e.capacity) {
+                    add_flow(e, std::min<U>(excess[v], e.capacity - e.flow));
                 } else {
-                    relabel(v);
+                    edge_ptr[v]++;
                 }
             }
         }
-
-        height[source] = n;
         return excess[sink];
     }
 
     bool left_of_mincut(int v) const {
-        return height[v] == n;
+        return height[v] >= n;
     }
 };
