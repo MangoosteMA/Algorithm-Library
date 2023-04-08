@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.py": "python",
+        "ostream": "cpp",
+        "random": "cpp"
+    }
+}

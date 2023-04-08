@@ -1,3 +1,5 @@
+// TODO: add edge-pointer for each node
+
 template<typename T>
 struct push_relabel {
     struct edge {
@@ -16,6 +18,9 @@ struct push_relabel {
     }
 
     int add(int from, int to, T forward_capacity, T backward_capacity = 0) {
+        if (from == to)
+            return -1;
+
         int id = g[from].size();
         g[from].push_back({to, int(g[to].size()) + (from == to), forward_capacity, 0});
         g[to].push_back({from, id, backward_capacity, 0});
@@ -95,7 +100,6 @@ struct push_relabel {
                             count[height[u]]--;
                             height[u] = n;
                             count[height[u]]++;
-                            activate(u);
                         }
                 } else {
                     relabel(v);
