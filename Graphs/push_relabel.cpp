@@ -33,13 +33,13 @@ struct push_relabel {
 
         std::fill(height.begin(), height.end(), 0);
         height[source] = n;
-        std::vector<int> count(2 * n);
+        std::vector<int> count(n + 1);
         count[0] = n - 1;
 
         std::vector<U> excess(n);
         std::vector<bool> activated(n);
         activated[sink] = true;
-        std::vector<std::vector<int>> layers(2 * n);
+        std::vector<std::vector<int>> layers(n + 1);
         std::vector<int> edge_ptr(n);
 
         auto add_flow = [&](edge &e, const T &pushed) {
@@ -70,10 +70,10 @@ struct push_relabel {
             layers[layer].pop_back();
             activated[v] = false;
 
-            while (excess[v] > 0) {
+            while (excess[v] > 0 && height[v] < n) {
                 if (edge_ptr[v] == int(g[v].size())) {
                     edge_ptr[v] = 0;
-                    height[v] = 2 * n - 1;
+                    height[v] = n;
                     for (auto &e : g[v])
                         if (e.flow < e.capacity)
                             height[v] = std::min(height[v], height[e.to] + 1);
@@ -84,11 +84,11 @@ struct push_relabel {
                         for (int u = 0; u < n; u++) {
                             if (layer < height[u] && height[u] < n) {
                                 count[height[u]]--;
-                                height[u] = n + 1;
+                                height[u] = n;
                             }
                         }
                     }
-                    layer = height[v];
+                    layer = height[v] == n ? layer : height[v];
                     continue;
                 }
 
@@ -104,6 +104,6 @@ struct push_relabel {
     }
 
     bool left_of_mincut(int v) const {
-        return height[v] >= n;
+        return height[v] == n;
     }
 };
