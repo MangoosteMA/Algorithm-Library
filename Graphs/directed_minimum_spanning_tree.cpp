@@ -18,17 +18,12 @@ struct directed_minimum_spanning_tree {
         return n;
     }
 
-    void reserve(int size) const {
-        edges.reserve(size);
-    }
-
     void add(int from, int to, T cost) {
-        using namespace std;
         edges.push_back({from, to, cost});
     }
 
     template<typename U>
-    U solve(int root) const {
+    std::pair<U, std::vector<int>> solve(int root) const {
         std::vector<int> parent(n);
         std::iota(parent.begin(), parent.end(), 0);
         std::vector<std::set<edge>> input_edges(n);
@@ -40,12 +35,13 @@ struct directed_minimum_spanning_tree {
         };
 
         std::vector<T> delta(n);
+        int current_layer = 0;
+        std::vector<std::vector<std::pair<int, int>>> added_edges(n);
 
         auto unite = [&](int v, int u) {
             v = get_root(v);
             u = get_root(u);
             assert(v != u);
-
             if (input_edges[v].size() < input_edges[u].size())
                 std::swap(v, u);
 
@@ -53,7 +49,6 @@ struct directed_minimum_spanning_tree {
                 e.cost += delta[u] - delta[v];
                 input_edges[v].insert(e);
             }
-
             std::set<edge>().swap(input_edges[u]);
             parent[u] = v;
         };
@@ -65,21 +60,23 @@ struct directed_minimum_spanning_tree {
 
             std::stack<edge> st;
             pos_in_stack[i] = 0;
-
             while (true) {
-                int v = get_root(st.empty() ? i : st.top().from);
+                int real_v = st.empty() ? i : st.top().from, v = get_root(real_v);
                 while (!input_edges[v].empty() && get_root(input_edges[v].begin()->from) == v)
                     input_edges[v].erase(input_edges[v].begin());
 
                 if (input_edges[v].empty())
-                    return {}; // the component of vertex v can't be reached from root
+                    return {U(), {}}; // the component of vertex v can't be reached from root
 
-                int u = get_root(input_edges[v].begin()->from);
+                int real_u = input_edges[v].begin()->from, u = get_root(real_u);
                 delta[v] = -input_edges[v].begin()->cost;
 
                 if (u == get_root(root)) {
                     st.push(*input_edges[v].begin());
+                    int new_layer = current_layer + st.size();
+                    current_layer = new_layer;
                     while (!st.empty()) {
+                        added_edges[st.top().from].emplace_back(st.top().to, --new_layer);
                         unite(st.top().to, root);
                         st.pop();
                     }
@@ -92,13 +89,30 @@ struct directed_minimum_spanning_tree {
                     continue;
                 }
 
+                added_edges[real_u].emplace_back(real_v, current_layer);
                 while (int(st.size()) != pos_in_stack[u]) {
+                    added_edges[st.top().from].emplace_back(st.top().to, current_layer);
                     unite(st.top().from, u);
                     st.pop();
                 }
                 pos_in_stack[get_root(u)] = pos_in_stack[u];
+                current_layer++;
             }
         }
-        return -accumulate(delta.begin(), delta.end(), U(0));
+
+        std::vector<int> mst_parent(n, -1);
+        std::priority_queue<std::tuple<int, int, int>> pq;
+        pq.emplace(0, root, root);
+        while (!pq.empty()) {
+            auto [_, v, p] = pq.top();
+            pq.pop();
+            if (mst_parent[v] != -1)
+                continue;
+
+            mst_parent[v] = p;
+            for (const auto &[u, w] : added_edges[v])
+                pq.emplace(-w, u, v);
+        }
+        return {-accumulate(delta.begin(), delta.end(), U(0)), mst_parent};
     }
 };
