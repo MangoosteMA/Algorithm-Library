@@ -14,7 +14,7 @@ private:
         return (n + 255) >> 8 << 2;
     }
 
-    void extand(int new_n) {
+    void expand(int new_n) {
         int prev_size = get_size();
         n = new_n;
         int new_size = get_size();
@@ -87,7 +87,7 @@ public:
 
     avx_bitset& operator|=(const avx_bitset &bs) {
         if (size() < bs.size())
-            extand(bs.size());
+            expand(bs.size());
 
         for (int i = 0; (i << 6) < bs.size(); i += 4)
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(values + i),
@@ -99,7 +99,7 @@ public:
 
     avx_bitset& operator&=(const avx_bitset &bs) {
         if (size() < bs.size())
-            extand(bs.size());
+            expand(bs.size());
 
         for (int i = 0; (i << 6) < bs.size(); i += 4)
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(values + i),
@@ -111,7 +111,7 @@ public:
 
     avx_bitset& operator^=(const avx_bitset &bs) {
         if (size() < bs.size())
-            extand(bs.size());
+            expand(bs.size());
 
         for (int i = 0; (i << 6) < bs.size(); i += 4)
             _mm256_storeu_si256(reinterpret_cast<__m256i*>(values + i),
