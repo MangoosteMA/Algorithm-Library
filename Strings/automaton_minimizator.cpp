@@ -50,7 +50,7 @@ struct automaton_minimizator {
 
         std::vector<int> current_class(n, -1);
         for (int i = 0; i < n; i++)
-            if (used_from_root[i] && used2[i])
+            if (used_from_root[i])
                 current_class[i] = nodes[i].terminal;
 
         if (!std::count(current_class.begin(), current_class.end(), 0) ||
@@ -61,8 +61,11 @@ struct automaton_minimizator {
 
         int class_id = *max_element(current_class.begin(), current_class.end()) + 1;
         std::vector<std::unordered_set<int>> sets(class_id);
-        for (int i = 0; i < class_id; i++)
+        std::queue<int> que;
+        for (int i = 0; i < class_id; i++) {
             sets[i].rehash(2 * n);
+            que.push(i);
+        }
 
         for (int i = 0; i < n; i++)
             if (current_class[i] != -1)
@@ -70,8 +73,6 @@ struct automaton_minimizator {
 
         std::unordered_map<int, std::vector<int>> vertexes;
         vertexes.rehash(2 * n);
-        std::queue<int> que;
-        que.push(0), que.push(1);
         while (!que.empty()) {
             int num = que.front();
             que.pop();
