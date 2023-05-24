@@ -54,13 +54,10 @@ struct automaton_minimizator {
                 current_class[i] = nodes[i].terminal;
 
         if (!std::count(current_class.begin(), current_class.end(), 0) ||
-            !std::count(current_class.begin(), current_class.end(), 1)) {
+            !std::count(current_class.begin(), current_class.end(), 1))
             for (int i = 0; i < n; i++)
                 if (current_class[i] != -1)
                     current_class[i] = 0;
-
-            return current_class;
-        }
 
 
         int class_id = 2;
