@@ -50,7 +50,7 @@ struct automaton_minimizator {
 
         std::vector<int> current_class(n, -1);
         for (int i = 0; i < n; i++)
-            if (used_from_root[i])
+            if (used_from_root[i] && used2[i])
                 current_class[i] = nodes[i].terminal;
 
         if (!std::count(current_class.begin(), current_class.end(), 0) ||
@@ -59,10 +59,11 @@ struct automaton_minimizator {
                 if (current_class[i] != -1)
                     current_class[i] = 0;
 
+        int class_id = *max_element(current_class.begin(), current_class.end()) + 1;
+        std::vector<std::unordered_set<int>> sets(class_id);
+        for (int i = 0; i < class_id; i++)
+            sets[i].rehash(2 * n);
 
-        int class_id = 2;
-        std::vector<std::unordered_set<int>> sets(2);
-        sets[0].rehash(2 * n), sets[1].rehash(2 * n);
         for (int i = 0; i < n; i++)
             if (current_class[i] != -1)
                 sets[current_class[i]].insert(i);
