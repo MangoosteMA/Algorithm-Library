@@ -85,6 +85,16 @@ namespace __to_string {
         res += "}";
         return res;
     }
+
+    template<typename T>
+    std::string to_string(std::stack<T> st) {
+        std::vector<T> values;
+        for (; !st.empty(); st.pop())
+            values.push_back(st.top());
+        
+        std::reverse(values.begin(), values.end());
+        return to_string(values);
+    }
 }
 
 void __dbg_out() {
