@@ -1,0 +1,9 @@
+add following functions:
+* find_closest_greater_to_the_left
+* find_closest_less_to_the_left
+* find_closest_greater_or_equal_to_the_left
+* find_closest_less_or_equal_to_the_left
+* find_closest_greater_to_the_right
+* find_closest_less_to_the_right
+* find_closest_greater_or_equal_to_the_right
+* find_closest_less_or_equal_to_the_right
