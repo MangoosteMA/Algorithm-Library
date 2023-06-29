@@ -19,11 +19,11 @@ struct matrix {
         return mat[i];
     }
 
-    const int size() const {
+    int size() const {
         return mat.size();
     }
 
-    const std::pair<int, int> shape() const {
+    std::pair<int, int> shape() const {
         return mat.empty() ? std::pair<int, int>{0, 0} : std::pair<int, int>{mat.size(), mat[0].size()};
     }
 
