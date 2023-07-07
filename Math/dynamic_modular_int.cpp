@@ -143,8 +143,13 @@ struct dynamic_modular_int {
         std::string s;
         in >> s;
         x = 0;
+        bool neg = s[0] == '-';
         for (const auto c : s)
-            x = x * 10 + (c - '0');
+            if (c != '-')
+                x = x * 10 + (c - '0');
+
+        if (neg)
+            x *= -1;
 
         return in;
     }
