@@ -1,4 +1,5 @@
 /*
+ * Zero based.
  * Type T must have operator += T.
  * Type T must have default constructor, which sets neutral value.
  * Operation += must be commutative.
@@ -17,7 +18,7 @@ struct binary_indexed_tree {
         return int(bit.size()) - 1;
     }
 
-    // Adds delta at the position pos (zero based).
+    // Adds delta at the position pos.
     void add(int pos, T delta) {
         for (pos++; pos < int(bit.size()); pos += pos & -pos)
             bit[pos] += delta;
