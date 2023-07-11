@@ -76,13 +76,13 @@ public:
         return *this;
     }
 
-    // removes extra zeroes
+    // Removes extra zeroes.
     void normalize() {
         while (!empty() && back() == T(0))
             pop_back();
     }
 
-    // returns -1 if all coefficients are zeroes (not O(1)!)
+    // Returns -1 if all coefficients are zeroes (not O(1)!).
     int degree() const {
         int deg = int(size()) - 1;
         while (deg >= 0 && (*this)[deg] == T(0))
@@ -99,8 +99,8 @@ public:
         return value;
     }
 
-    // calculates eval at the given points
-    // O(n log^2)
+    // Calculates eval at the given points.
+    // O(n log^2).
     std::vector<T> multipoint_evaluation(const std::vector<T> &points) const {
         const int n = points.size();
         if (n == 0)
@@ -196,8 +196,8 @@ public:
         return *this;
     }
 
-    // division with remainder
-    // O(nlog)
+    // Division with remainder.
+    // O(nlog).
     polynom_t<mod>& operator/=(const polynom_t<mod> &another) {
         polynom_t<mod> a(*this), b(another);
         a.normalize(), b.normalize();
@@ -235,8 +235,8 @@ public:
         return *this;
     }
 
-    // returns derivative
-    // O(n)
+    // Returns derivative.
+    // O(n).
     polynom_t<mod> derivative() const {
         polynom_t<mod> der(std::max(0, int(size()) - 1));
         for (int i = 0; i < int(der.size()); i++)
@@ -245,8 +245,8 @@ public:
         return der;
     }
 
-    // returns integral
-    // O(n)
+    // Returns integral.
+    // O(n).
     polynom_t<mod> integral(const T &constant = T(0)) const {
         polynom_t<mod> in(size() + 1);
         in[0] = constant;
@@ -256,8 +256,8 @@ public:
         return in;
     }
 
-    // returns p^{-1} modulo x^{degree}
-    // O(nlog)
+    // Returns p^{-1} modulo x^{degree}.
+    // O(nlog).
     polynom_t<mod> inv(int degree) const {
         assert(!empty() && (*this)[0] != T(0) && "polynom is not invertable");
         polynom_t<mod> inv(std::min(degree, INV_BRUTE_FORCE_SIZE)), have(inv.size());
@@ -276,15 +276,15 @@ public:
         return inv.resize(degree);
     }
 
-    // returns log(p) modulo x^{degree}
-    // O(nlog)
+    // Returns log(p) modulo x^{degree}.
+    // O(nlog).
     polynom_t<mod> log(int degree) const {
         assert(!empty() && (*this)[0] == T(1) && "log is not defined");
         return (derivative().resize(degree) * inv(degree)).resize(degree).integral(T(0)).resize(degree);
     }
 
-    // returns exp(p) modulo x^{degree}
-    // O(nlog), but with a huge constant
+    // Returns exp(p) modulo x^{degree}.
+    // O(nlog), but with a huge constant.
     polynom_t<mod> exp(int degree) const {
         assert(!empty() && (*this)[0] == T(0) && "exp is not defined");
         polynom_t<mod> exp{1};
@@ -297,8 +297,8 @@ public:
         return exp;
     }
 
-    // returns p^{d} modulo x^{degree}
-    // O(nlog), but with a very huge constant
+    // Returns p^{d} modulo x^{degree}.
+    // O(nlog), but with a very huge constant.
     polynom_t<mod> power(int64_t d, int degree) const {
         if (!d || !degree)
             return polynom_t<mod>{1}.resize(degree);
