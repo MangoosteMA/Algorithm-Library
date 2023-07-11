@@ -1,3 +1,9 @@
+/*
+ * Zero based.
+ * Works for operations Op, such that Op(S) = Op(S, x), where x in S (like min, max, gcd...).
+ * Operation must be commutative.
+*/
+
 template<typename T, typename merge_t>
 struct sparse_table {
     std::vector<std::vector<T>> sparse;
@@ -25,9 +31,28 @@ struct sparse_table {
         return *this;
     }
 
+    // Returns result of merging elements on the interval [l, r).
     T query(int l, int r) const {
         assert(l < r);
         const int level = std::__lg(r - l);
         return merge(sparse[level][l], sparse[level][r - (1 << level)]);
     }
 };
+
+/*
+Example:
+auto merge_min = [](int x, int y) {
+    return x < y ? x : y;
+};
+sparse_table<int, decltype(merge_min)> sparse(a, merge_min);
+*/
+
+/*
+For finding the index of the minimum element:
+std::vector<int> sparse_init(n);
+std::iota(sparse_init.begin(), sparse_init.end(), 0);
+auto merge_min = [](int i, int j) {
+    return a[i] < a[j] ? i : j;
+};
+sparse_table<int, decltype(merge_min)> sparse(sparse_init, merge_min);
+*/
