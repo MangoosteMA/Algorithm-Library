@@ -1,6 +1,6 @@
 /*
  * MOD assumed to be prime.
- * If MOD is not prime .inv() and .power() method won't work.
+ * If MOD is not prime .inv() and .power() methods won't work.
 */
 
 template<typename T>
