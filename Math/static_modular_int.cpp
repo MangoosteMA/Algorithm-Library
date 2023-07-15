@@ -1,3 +1,8 @@
+/*
+ * MOD assumed to be a prime.
+ * If MOD is not a prime .inv() and .power() method won't work.
+*/
+
 template<typename T>
 int normalize(T value, int mod) {
     if (value < -mod || value >= 2 * mod) value %= mod;
@@ -8,6 +13,7 @@ int normalize(T value, int mod) {
 
 template<int mod>
 struct static_modular_int {
+    static_assert(mod - 2 <= std::numeric_limits<int>::max() - mod, "2(mod - 1) <= INT_MAX");
     using mint = static_modular_int<mod>;
 
     int value;
@@ -20,7 +26,7 @@ struct static_modular_int {
 
     template<typename T>
     mint power(T degree) const {
-        degree = normalize(degree, mod - 1);
+        degree = normalize(degree, mod - 1); // remove this line if mod is not prime
         mint prod = 1, a = *this;
         for (; degree > 0; degree >>= 1, a *= a)
             if (degree & 1)
