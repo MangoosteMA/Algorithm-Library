@@ -1,3 +1,9 @@
+/*
+ * Include static_modular_int to use it.
+ * No need to run any init function.
+ * If MOD is not prime inv and ifact won't be correct.
+*/
+
 namespace combinatorics {
     std::vector<mint> fact_, ifact_, inv_;
 
@@ -33,6 +39,7 @@ namespace combinatorics {
         }
     } fact(fact_), ifact(ifact_), inv(inv_);
 
+    // From n choose k.
     mint choose(int n, int k) {
         if (n < k || k < 0 || n < 0)
             return mint(0);
