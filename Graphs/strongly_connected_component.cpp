@@ -14,6 +14,8 @@ struct strongly_connected_component {
         g[from].push_back(to);
     }
 
+    // Returns for each vertex the scc id from [0, number_of_scc).
+    // If u is reachable from v, then scc[v] <= scc[u].
     std::vector<int> scc() const {
         std::vector<int> num(n, -1), low(n), scc(n, -1), st;
         int v_num = 0, scc_num = 0;
@@ -70,6 +72,8 @@ struct strongly_connected_component {
         rev_g[to].push_back(from);
     }
 
+    // Returns for each vertex the scc id from [0, number_of_scc).
+    // If u is reachable from v, then scc[v] <= scc[u].
     std::vector<int> scc() const {
         std::vector<int> order;
         order.reserve(n);
