@@ -1,3 +1,9 @@
+/*
+ * Node must have default constructor.
+ * Node must have static function merge.
+ * Node must have .push and .clear_after_push methods.
+*/
+
 template<typename node>
 class segtree {
 private:
@@ -38,8 +44,8 @@ private:
         }
  
         int vm = (vl + vr) >> 1;
-        tree[v].push(tree[v << 1], vl, vr, vl, vm);
-        tree[v].push(tree[v << 1 | 1], vl, vr, vm, vr);
+        tree[v].push(tree[v << 1], vl, vm);
+        tree[v].push(tree[v << 1 | 1], vm, vr);
         tree[v].clear_after_push();
  
         _update(v << 1, vl, vm, l, r, std::forward<Args>(args)...);
@@ -52,8 +58,8 @@ private:
             return tree[v];
  
         int vm = (vl + vr) >> 1;
-        tree[v].push(tree[v << 1], vl, vr, vl, vm);
-        tree[v].push(tree[v << 1 | 1], vl, vr, vm, vr);
+        tree[v].push(tree[v << 1], vl, vm);
+        tree[v].push(tree[v << 1 | 1], vm, vr);
         tree[v].clear_after_push();
  
         if (r <= vm)
@@ -77,8 +83,8 @@ private:
             return vl;
 
         int vm = (vl + vr) >> 1;
-        tree[v].push(tree[v << 1], vl, vr, vl, vm);
-        tree[v].push(tree[v << 1 | 1], vl, vr, vm, vr);
+        tree[v].push(tree[v << 1], vl, vm);
+        tree[v].push(tree[v << 1 | 1], vm, vr);
         tree[v].clear_after_push();
 
         int res = _find_first(v << 1, vl, vm, from, checker);
@@ -97,8 +103,8 @@ private:
             return vl;
 
         int vm = (vl + vr) >> 1;
-        tree[v].push(tree[v << 1], vl, vr, vl, vm);
-        tree[v].push(tree[v << 1 | 1], vl, vr, vm, vr);
+        tree[v].push(tree[v << 1], vl, vm);
+        tree[v].push(tree[v << 1 | 1], vm, vr);
         tree[v].clear_after_push();
 
         int res = _find_last(v << 1 | 1, vm, vr, from, checker);
@@ -122,9 +128,6 @@ public:
         return n;
     }
  
-    /*
-     * update on interval [l, r)
-     */
     template<typename... Args>
     void update(int l, int r, Args&&... args) {
         if (r <= l)
@@ -133,58 +136,48 @@ public:
         _update(1, 0, n, l, r, std::forward<Args>(args)...);
     }
  
-    /*
-     * query on interval [l, r)
-     */
     node query(int l, int r) {
         assert(std::max(0, l) < std::min(n, r)); // or return node() in this case
         return _query(1, 0, n, l, r);
     }
 
-    /*
-     * trying to find on interval [from, n)
-     * returns n if not found
-     */
+    // Trying to find first true on the interval [from, n).
+    // Returns n if not found.
     template<typename T>
     int find_first(int from, const T &checker) {
         return _find_first(1, 0, n, from, checker);
     }
 
-    /*
-     * trying to find on interval [0, from)
-     * returns -1 if not found
-     */
+    // Trying to find last true on the interval [0, from).
+    // Returns -1 if not found.
     template<typename T>
     int find_last(int from, const T &checker) {
         return _find_last(1, 0, n, from, checker);
     }
 };
 
-/*
-struct node {
-    node() {}
-    void apply(..., int vl, int vr) {}
-    void push(node &child, int vl, int vr, int cl, int cr) {}
-    void clear_after_push() {}
-    static node merge(const node &left, const node &right) {}
-};
-*/
+// Node template:
+// struct node {
+//     node() {}
+//     void apply(..., int /* vl */, int /* vr */) {}
+//     void push(node /* &child */, int /* cl */, int /* cr */) {}
+//     void clear_after_push() {}
+//     static node merge(const node &left, const node &right) {}
+// };
 
 /*
-node for += and sum/max
 struct node {
-    ll mx, mod = 0, sum;
+    ll mn = 0, mod = 0, sum = 0;
 
     node() {}
-    node(ll x) : mx(x), sum(x) {}
 
     void apply(ll delta, int vl, int vr) {
         mod += delta;
         sum += 1ll * (vr - vl) * delta;
-        mx += delta;
+        mn += delta;
     }
 
-    void push(node &child, int vl, int vr, int cl, int cr) {
+    void push(node &child, int cl, int cr) {
         child.apply(mod, cl, cr);
     }
     
@@ -195,7 +188,7 @@ struct node {
     static node merge(const node &left, const node &right) {
         node res;
         res.sum = left.sum + right.sum;
-        res.mx = max(left.mx, right.mx);
+        res.mn = min(left.mn, right.mn);
         assert(res.mod == 0);
         return res;
     }
