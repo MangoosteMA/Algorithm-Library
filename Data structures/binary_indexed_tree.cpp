@@ -43,3 +43,70 @@ struct binary_indexed_tree {
         return res;
     }
 };
+
+/*
+ * Zero based.
+ * Type T must have same restriction as for binary_indexed_tree.
+ * Type T must have operator -T.
+*/
+
+template<typename T>
+struct segment_adding_binary_indexed_tree {
+    binary_indexed_tree<T> values;
+
+    segment_adding_binary_indexed_tree(int n = 0) : values(n) {}
+
+    int size() const {
+        return values.size();
+    }
+
+    // Adding value on the interval [l, r).
+    void add(int l, int r, T value) {
+        values.add(l, value);
+        values.add(r, -value);
+    }
+
+    // Returns the element on the position pos.
+    T at(int pos) {
+        return values.query(pos);
+    }
+};
+
+/*
+ * Zero based.
+ * Works for signed integer types.
+*/
+
+template<typename T>
+struct segment_adding_segment_query_binary_indexed_tree {
+    segment_adding_binary_indexed_tree<T> k, b;
+
+    segment_adding_segment_query_binary_indexed_tree(int n = 0) : k(n), b(n) {}
+
+    int size() const {
+        return k.size();
+    }
+
+    // Adding val on the interval [l, r).
+    void add(int l, int r, T val) {
+        if (r <= l)
+            return;
+
+        b.add(l, r, -(l - 1) * val);
+        b.add(r, size(), (r - l) * val);
+        k.add(l, r, val);
+    }
+
+    // Returns the sum on the interval [0, pref].
+    T query(int pref) {
+        return b.at(pref) + pref * k.at(pref);
+    }
+
+    // Returns the sum on the interval [l, r).
+    T query(int l, int r) {
+        if (r <= l)
+            return T();
+
+        return query(r - 1) - query(l - 1);
+    }
+};
