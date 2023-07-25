@@ -7,7 +7,7 @@ using ld = long double;
 #define all(a) begin(a), end(a)
 #define len(a) int((a).size())
 
-void solve(int test_num) {
+void solve(int /* test_num */) {
 }
 
 int main() {
