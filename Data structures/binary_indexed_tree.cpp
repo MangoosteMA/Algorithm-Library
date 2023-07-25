@@ -13,7 +13,6 @@ struct binary_indexed_tree {
     // Fills the array with default values.
     binary_indexed_tree(int n = 0) : bit(n + 1) {}
 
-    // Returns size of the initial array.
     int size() const {
         return int(bit.size()) - 1;
     }
