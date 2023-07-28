@@ -1,8 +1,8 @@
-struct strongly_connected_component {
+struct strongly_connected_components {
     int n;
     std::vector<std::vector<int>> g;
 
-    strongly_connected_component(int n = 0) : n(n), g(n) {}
+    strongly_connected_components(int n = 0) : n(n), g(n) {}
 
     int size() const {
         return n;
@@ -55,11 +55,11 @@ struct strongly_connected_component {
     }
 };
 
-struct strongly_connected_component {
+struct strongly_connected_components {
     int n;
     std::vector<std::vector<int>> g, rev_g;
 
-    strongly_connected_component(int n = 0) : n(n), g(n), rev_g(n) {}
+    strongly_connected_components(int n = 0) : n(n), g(n), rev_g(n) {}
 
     int size() const {
         return n;
