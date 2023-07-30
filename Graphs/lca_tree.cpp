@@ -9,7 +9,7 @@ template<typename T = int>
 struct lca_tree {
     int n;
     std::vector<std::vector<std::pair<int, T>>> g;
-    std::vector<int> tin, tout;
+    std::vector<int> tin, tout, parent;
     std::vector<std::pair<int, int>> order;
     std::vector<T> depth;
  
@@ -37,6 +37,10 @@ struct lca_tree {
         for (const auto &[v, u] : edges)
             add(v, u);
     }
+
+    lca_tree(const lca_tree<T> &lca) :
+        n(lca.n), g(lca.g), tin(lca.tin), tout(lca.tout), order(lca.order), depth(lca.depth), sparse(lca.sparse)
+    {}
  
     // Adding edge (v, u) with weight w (1 by default).
     void add(int v, int u, T w = 1) {
@@ -52,24 +56,26 @@ struct lca_tree {
     void build(int root = 0) {
         tin.resize(n);
         tout.resize(n);
+        parent.assign(n, -1);
         order.clear();
         order.reserve(n - 1);
         depth.resize(n);
         int timer = 0;
  
-        std::function<void(int, int, int)> dfs = [&](int v, int p, int dep) {
+        std::function<void(int, int)> dfs = [&](int v, int dep) {
             tin[v] = timer++;
             for (auto &[u, w] : g[v]) {
-                if (u == p)
+                if (u == parent[v])
                     continue;
  
+                parent[u] = v;
                 depth[u] = depth[v] + w;
                 order.emplace_back(dep, v);
-                dfs(u, v, dep + 1);
+                dfs(u, dep + 1);
             }
             tout[v] = timer;
         };
-        dfs(root, -1, 0);
+        dfs(root, 0);
  
         sparse = sparse_table_t(order, merge_min);
     }

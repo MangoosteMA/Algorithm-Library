@@ -26,6 +26,8 @@ struct sparse_table {
         }
     }
 
+    sparse_table(const sparse_table &sparse) : sparse(sparse.sparse), merge(sparse.merge) {}
+
     sparse_table& operator=(const sparse_table<T, merge_t> &another) {
         sparse = another.sparse;
         return *this;
