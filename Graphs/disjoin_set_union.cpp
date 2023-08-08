@@ -8,6 +8,7 @@ struct disjoin_set_union {
         return f.size();
     }
 
+    // Resets everything.
     void set_default() {
         components = size();
         std::fill(f.begin(), f.end(), -1);
@@ -17,6 +18,7 @@ struct disjoin_set_union {
         return f[v] < 0 ? v : f[v] = root(f[v]);
     }
 
+    // Returns true if v and u were in different components.
     bool unite(int v, int u) {
         v = root(v), u = root(u);
         if (v == u)
@@ -31,7 +33,13 @@ struct disjoin_set_union {
         return true;
     }
 
+    // Returns true if v and u are in the same set.
     bool connected(int v, int u) {
         return root(v) == root(u);
+    }
+
+    // Returns the size of the set with v.
+    int component_size(int v) {
+        return -f[root(v)];
     }
 };
