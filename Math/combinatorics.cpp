@@ -46,9 +46,25 @@ namespace combinatorics {
  
         return fact[n] * ifact[k] * ifact[n - k];
     }
+
+    // From n choose k.
+    // O(min(k, n - k)).
+    mint choose_slow(int n, int k) {
+        if (n < k || k < 0 || n < 0)
+            return mint(0);
+        
+        k = std::min(k, n - k);
+        mint result = 1;
+        for (int i = k; i >= 1; i--) {
+            result *= (n - i + 1);
+            result *= inv[i];
+        }
+        return result;
+    }
 }
 
 using combinatorics::fact;
 using combinatorics::ifact;
 using combinatorics::inv;
 using combinatorics::choose;
+using combinatorics::choose_slow;
