@@ -20,7 +20,7 @@ namespace sieve {
         return smallest_factor[n] == n;
     }
 
-    std::vector<std::pair<int, int>> get_factors(int n) {
+    std::vector<std::pair<int, int>> get_prime_factors(int n) {
         std::vector<std::pair<int, int>> factors;
         while (n != 1) {
             int prime = smallest_factor[n];
@@ -33,9 +33,27 @@ namespace sieve {
         }
         return factors;
     }
+
+    std::vector<int> get_all_factors(int value) {
+        std::vector<int> divs{1};
+        for (auto [p, d] : get_prime_factors(value)) {
+            int prev_size = divs.size();
+            for (int i = 0; i < prev_size; i++) {
+                int coeff = 1;
+                for (int j = 0; j < d; j++) {
+                    coeff *= p;
+                    divs.push_back(divs[i] * coeff);
+                }
+            }
+        }
+
+        sort(divs.begin(), divs.end());
+        return divs;
+    }
 } // namespace sieve
 
 using sieve::primes;
 using sieve::smallest_factor;
 using sieve::is_prime;
-using sieve::get_factors;
+using sieve::get_prime_factors;
+using sieve::get_all_factors;
