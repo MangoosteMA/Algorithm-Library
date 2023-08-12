@@ -53,7 +53,7 @@ namespace math {
     }
 
     template<typename A, typename B = __int128>
-    bool is_prime(A x, const int tests = 20) {
+    bool is_prime(A x, const int tests = 30) {
         static std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
 
         if (x == 1)
