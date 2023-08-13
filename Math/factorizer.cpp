@@ -52,11 +52,11 @@ namespace factorizer {
         };
 
         if (value < 4759123141ull) {
-        	for (auto base : {2, 7, 61})
+            for (ull base : {2, 7, 61})
                 if (!miller_rabin(base % value))
                     return false;
         } else {
-        	for (auto base : {2, 325, 9375, 28178, 450775, 9780504, 1795265022})
+            for (ull base : {2, 325, 9375, 28178, 450775, 9780504, 1795265022})
                 if (!miller_rabin(base % value))
                     return false;
         }
@@ -125,7 +125,7 @@ namespace factorizer {
     std::vector<T> get_all_prime_factors_with_duplicates(T value) {
         std::vector<T> res;
 
-        auto dfs = [&](auto self,ull v) -> void {
+        auto dfs = [&](auto self, ull v) -> void {
             if (v == 1)
                 return;
 
