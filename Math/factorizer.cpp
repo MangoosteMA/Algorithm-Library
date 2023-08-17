@@ -143,6 +143,7 @@ namespace factorizer {
         return res;
     }
 
+    // Return all prime factors in the format (prime, degree) sorted by prime.
     template<typename T>
     std::vector<std::pair<T, int>> get_all_prime_factors(T value) {
         auto prime_factors = get_all_prime_factors_with_duplicates(value);
@@ -156,6 +157,7 @@ namespace factorizer {
         return factors;
     }
 
+    // Returns all factors of the number sorted in increasing order.
     template<typename T>
     std::vector<T> get_all_factors(T value) {
         std::vector<T> divs{1};
