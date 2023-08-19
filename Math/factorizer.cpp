@@ -72,7 +72,7 @@ namespace factorizer {
         if (is_prime(value) || value == 1)
             return value;
 
-        static mt19937_64 rng(chrono::steady_clock::now().time_since_epoch().count());
+        static std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
         for (ull length = 1ull << max(int(__lg(value)) / 4, 0);; length <<= 1) {
             ull x = rng() % (value - 1) + 1;
             ull y = x;
@@ -99,7 +99,7 @@ namespace factorizer {
                     y = f(f(y));
                 }
 
-                ull g = gcd(prod, value);
+                ull g = std::gcd(prod, value);
                 if (g == 1)
                     continue;
 
@@ -107,7 +107,7 @@ namespace factorizer {
                 y = save_y;
                 for (ull j = 0; j < step; j++) {
                     if (x != y) {
-                        g = gcd(diff(x, y), value);
+                        g = std::gcd(diff(x, y), value);
                         if (g != 1)
                             return g;
                     }
@@ -139,7 +139,7 @@ namespace factorizer {
         };
 
         dfs(dfs, value);
-        sort(res.begin(), res.end());
+        std::sort(res.begin(), res.end());
         return res;
     }
 
@@ -172,7 +172,7 @@ namespace factorizer {
             }
         }
 
-        sort(divs.begin(), divs.end());
+        std::sort(divs.begin(), divs.end());
         return divs;
     }
 } // namespace factorizer
