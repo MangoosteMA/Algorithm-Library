@@ -255,7 +255,7 @@ namespace tree_drawer {
 
     template<typename T, typename _ = typename std::enable_if_t<std::is_integral_v<T>, T>>
     void draw_tree(const std::vector<std::vector<T>> &g, int root) {
-        std::cerr << dfs(g, root) << '\n' << std::flush;
+        std::cerr << dfs(g, root) << '\n' << '\n' << std::flush;
     }
 
     template<typename U,
