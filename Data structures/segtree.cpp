@@ -167,14 +167,15 @@ public:
 
 /*
 struct node {
-    ll mn = 0, mod = 0, sum = 0;
+    ll mn = 0, mx = 0, sum = 0, mod = 0;
 
     node() {}
 
     void apply(ll delta, int vl, int vr) {
-        mod += delta;
-        sum += 1ll * (vr - vl) * delta;
         mn += delta;
+        mx += delta;
+        sum += 1ll * (vr - vl) * delta;
+        mod += delta;
     }
 
     void push(node &child, int cl, int cr) {
@@ -187,8 +188,9 @@ struct node {
 
     static node merge(const node &left, const node &right) {
         node res;
-        res.sum = left.sum + right.sum;
         res.mn = min(left.mn, right.mn);
+        res.mx = max(left.mx, right.mx);
+        res.sum = left.sum + right.sum;
         assert(res.mod == 0);
         return res;
     }
