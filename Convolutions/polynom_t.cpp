@@ -24,15 +24,12 @@ private:
     static constexpr int INV_BRUTE_FORCE_SIZE = 1 << 7;
 
     static void fft(polynom_t<mint> &a) {
-        if (a.empty())
-            return;
-
         int n = a.size();
-        a.resize(n);
-        polynom_t<mint> b(n);
+        static polynom_t<mint> b;
+        b.resize(n);
 
-        static mint primitive_root = mint::primitive_root();
-        for (int w = (n >> 1); w; w >>= 1, std::swap(a, b)) {
+        static const mint primitive_root = mint::primitive_root();
+        for (int w = (n >> 1); w > 0; w >>= 1, std::swap(a, b)) {
             mint r = mint(primitive_root).power((mint::get_mod() - 1) / n * w);
             mint m = 1;
             for (int i = 0; i < n; i += (w << 1), m *= r)
