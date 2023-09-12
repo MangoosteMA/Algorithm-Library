@@ -25,6 +25,10 @@ struct static_modular_int {
     template<typename T, typename U = std::enable_if_t<std::is_integral<T>::value>>
     static_modular_int(T value) : value(normalize(value, mod)) {}
 
+    static constexpr int get_mod() {
+		return mod;
+	}
+
     template<typename T>
     mint power(T degree) const {
         degree = normalize(degree, mod - 1); // remove this line if mod is not prime
