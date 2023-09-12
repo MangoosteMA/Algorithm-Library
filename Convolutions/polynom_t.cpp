@@ -1,20 +1,19 @@
 /*
- * Include static_modular_int to use it.
+ * Include static_modular_int or montgomery (a bit faster) to use it.
  * Don't need to care about precomputing primitive root.
  * Use it like vector<mint> with extra methods.
 */
 
-template<int mod>
-class polynom_t : public std::vector<static_modular_int<mod>> {
+template<typename mint>
+class polynom_t : public std::vector<mint> {
 public:
-    using T = static_modular_int<mod>;
-    using std::vector<T>::empty;
-    using std::vector<T>::back;
-    using std::vector<T>::pop_back;
-    using std::vector<T>::size;
-    using std::vector<T>::clear;
-    using std::vector<T>::begin;
-    using std::vector<T>::end;
+    using std::vector<mint>::empty;
+    using std::vector<mint>::back;
+    using std::vector<mint>::pop_back;
+    using std::vector<mint>::size;
+    using std::vector<mint>::clear;
+    using std::vector<mint>::begin;
+    using std::vector<mint>::end;
 
 private:
     static constexpr int EVAL_N = 1 << 5;
@@ -24,75 +23,57 @@ private:
     static constexpr int DIV_M_CUT = 1 << 6;
     static constexpr int INV_BRUTE_FORCE_SIZE = 1 << 7;
 
-    static void fft(polynom_t<mod> &a) {
+    static void fft(polynom_t<mint> &a) {
         if (a.empty())
             return;
 
-        static T primitive_root = T::primitive_root();
-        int n = int(a.size());
-        assert((n & (n - 1)) == 0);
-        int lg = std::__lg(n);
+        int n = a.size();
+        a.resize(n);
+        polynom_t<mint> b(n);
 
-        static std::vector<int> reversed_mask;
-        if (int(reversed_mask.size()) != n) {
-            reversed_mask.resize(n);
-            for (int mask = 1; mask < n; mask++)
-                reversed_mask[mask] = (reversed_mask[mask >> 1] >> 1) + ((mask & 1) << (lg - 1));
-        }
-
-        static std::vector<T> roots;
-        if (int(roots.size()) != lg) {
-            roots.resize(lg);
-            for (int i = 0; i < lg; i++)
-                roots[i] = primitive_root.power((mod - 1) / (2 << i));
-        }
-
-        for (int i = 0; i < n; i++)
-            if (reversed_mask[i] < i)
-                std::swap(a[i], a[reversed_mask[i]]);
-
-        for (int len = 1; len < n; len <<= 1) {
-            T root = roots[std::__lg(len)];
-            for (int i = 0; i < n; i += (len << 1)) {
-                T current = 1;
-                for (int j = 0; j < len; j++, current *= root) {
-                    T value = a[i + j + len] * current;
-                    a[i + j + len] = a[i + j] - value;
-                    a[i + j] = a[i + j] + value;
+        static mint primitive_root = mint::primitive_root();
+        for (int w = (n >> 1); w; w >>= 1, std::swap(a, b)) {
+            mint r = mint(primitive_root).power((mint::get_mod() - 1) / n * w);
+            mint m = 1;
+            for (int i = 0; i < n; i += (w << 1), m *= r)
+                for (int j = 0; j < w; j++) {
+                    mint u = a[i + j];
+                    mint v = a[i + j + w] * m;
+                    b[(i >> 1) + j] = u + v;
+                    b[(i >> 1) + j + (n >> 1)] = u - v;
                 }
-            }
         }
     }
 
 public:
     template<typename V>
-    polynom_t(const std::initializer_list<V> &lst) : std::vector<T>(lst.begin(), lst.end()) {}
+    polynom_t(const std::initializer_list<V> &lst) : std::vector<mint>(lst.begin(), lst.end()) {}
 
     template<typename... Args>
-    polynom_t(Args&&... args) : std::vector<T>(std::forward<Args>(args)...) {}
+    polynom_t(Args&&... args) : std::vector<mint>(std::forward<Args>(args)...) {}
 
-    polynom_t<mod>& resize(int n) {
-        std::vector<T>::resize(n);
+    polynom_t<mint>& resize(int n) {
+        std::vector<mint>::resize(n);
         return *this;
     }
 
     // Removes extra zeroes.
     void normalize() {
-        while (!empty() && back() == T(0))
+        while (!empty() && back() == mint(0))
             pop_back();
     }
 
     // Returns -1 if all coefficients are zeroes (not O(1)!).
     int degree() const {
         int deg = int(size()) - 1;
-        while (deg >= 0 && (*this)[deg] == T(0))
+        while (deg >= 0 && (*this)[deg] == mint(0))
             deg--;
 
         return deg;
     }
 
-    T eval(const T &x) const {
-        T power = 1, value = 0;
+    mint eval(const mint &x) const {
+        mint power = 1, value = 0;
         for (int i = 0; i < int(size()); i++, power *= x)
             value += (*this)[i] * power;
 
@@ -101,13 +82,13 @@ public:
 
     // Calculates eval at the given points.
     // O(n log^2).
-    std::vector<T> multipoint_evaluation(const std::vector<T> &points) const {
+    std::vector<mint> multipoint_evaluation(const std::vector<mint> &points) const {
         const int n = points.size();
         if (n == 0)
             return {};
 
         const int tree_size = (n + EVAL_N - 1) / EVAL_N;
-        std::vector<polynom_t<mod>> tree(tree_size << 1);
+        std::vector<polynom_t<mint>> tree(tree_size << 1);
         for (int v = 0; v < tree_size; v++) {
             int from = v * EVAL_N, to = std::min(n, from + EVAL_N);
             tree[tree_size + v].resize(to - from + 1);
@@ -126,7 +107,7 @@ public:
         for (int v = 2; v < 2 * tree_size; v++)
             tree[v] = tree[v >> 1] % tree[v];
 
-        std::vector<T> eval(n);
+        std::vector<mint> eval(n);
         for (int v = 0; v < tree_size; v++)
             for (int i = v * EVAL_N; i < std::min(n, (v + 1) * EVAL_N); i++)
                 eval[i] = tree[tree_size + v].eval(points[i]);
@@ -134,11 +115,11 @@ public:
         return eval;
     }
 
-    polynom_t<mod> operator-() const {
-        return polynom_t(*this) * T(-1);
+    polynom_t<mint> operator-() const {
+        return polynom_t(*this) * mint(-1);
     }
 
-    polynom_t<mod>& operator+=(const polynom_t<mod> &another) {
+    polynom_t<mint>& operator+=(const polynom_t<mint> &another) {
         if (size() < another.size())
             resize(another.size());
         
@@ -148,7 +129,7 @@ public:
         return *this;
     }
 
-    polynom_t<mod>& operator-=(const polynom_t<mod> &another) {
+    polynom_t<mint>& operator-=(const polynom_t<mint> &another) {
         if (size() < another.size())
             resize(another.size());
         
@@ -158,7 +139,7 @@ public:
         return *this;
     }
 
-    polynom_t<mod>& operator*=(const polynom_t<mod> &another) {
+    polynom_t<mint>& operator*=(const polynom_t<mint> &another) {
         if (empty() || another.empty()) {
             clear();
             return *this;
@@ -166,7 +147,7 @@ public:
 
         if (std::min(size(), another.size()) <= MUL_MIN_CUT
             || std::max(size(), another.size()) <= MUL_MAX_CUT) {
-            polynom_t<mod> product(int(size() + another.size()) - 1);
+            polynom_t<mint> product(int(size() + another.size()) - 1);
             for (int i = 0; i < int(size()); i++)
                 for (int j = 0; j < int(another.size()); j++)
                     product[i + j] += (*this)[i] * another[j];
@@ -188,7 +169,7 @@ public:
 
         fft(*this);
         std::reverse(begin() + 1, end());
-        T inv_n = T(1) / T(n);
+        mint inv_n = mint(1) / mint(n);
         resize(real_size);
         for (auto &x : *this)
             x *= inv_n;
@@ -198,8 +179,8 @@ public:
 
     // Division with remainder.
     // O(nlog).
-    polynom_t<mod>& operator/=(const polynom_t<mod> &another) {
-        polynom_t<mod> a(*this), b(another);
+    polynom_t<mint>& operator/=(const polynom_t<mint> &another) {
+        polynom_t<mint> a(*this), b(another);
         a.normalize(), b.normalize();
         assert(!b.empty());
         int n = int(a.size()), m = int(b.size());
@@ -207,8 +188,8 @@ public:
             return *this = {};
 
         if (n <= DIV_N_CUT || m <= DIV_M_CUT) {
-            polynom_t<mod> quotient(n - m + 1);
-            T inv_b = T(1) / b.back();
+            polynom_t<mint> quotient(n - m + 1);
+            mint inv_b = mint(1) / b.back();
             for (int i = n - 1; i >= m - 1; i--) {
                 int pos = i - m + 1;
                 quotient[pos] = a[i] * inv_b;
@@ -221,7 +202,7 @@ public:
 
         std::reverse(a.begin(), a.end());
         std::reverse(b.begin(), b.end());
-        polynom_t<mod> quotient = a * b.inv(n - m + 1);
+        polynom_t<mint> quotient = a * b.inv(n - m + 1);
         quotient.resize(n - m + 1);
         std::reverse(quotient.begin(), quotient.end());
         quotient.normalize();
@@ -229,7 +210,7 @@ public:
     }
 
     // O(nlog)
-    polynom_t<mod>& operator%=(const polynom_t<mod> &another) {
+    polynom_t<mint>& operator%=(const polynom_t<mint> &another) {
         *this -= (*this) / another * another;
         normalize();
         return *this;
@@ -237,40 +218,40 @@ public:
 
     // Returns derivative.
     // O(n).
-    polynom_t<mod> derivative() const {
-        polynom_t<mod> der(std::max(0, int(size()) - 1));
+    polynom_t<mint> derivative() const {
+        polynom_t<mint> der(std::max(0, int(size()) - 1));
         for (int i = 0; i < int(der.size()); i++)
-            der[i] = T(i + 1) * (*this)[i + 1];
+            der[i] = mint(i + 1) * (*this)[i + 1];
 
         return der;
     }
 
     // Returns integral.
     // O(n).
-    polynom_t<mod> integral(const T &constant = T(0)) const {
-        polynom_t<mod> in(size() + 1);
+    polynom_t<mint> integral(const mint &constant = mint(0)) const {
+        polynom_t<mint> in(size() + 1);
         in[0] = constant;
         for (int i = 1; i < int(in.size()); i++)
-            in[i] = (*this)[i - 1] / T(i);
+            in[i] = (*this)[i - 1] / mint(i);
 
         return in;
     }
 
     // Returns p^{-1} modulo x^{degree}.
     // O(nlog).
-    polynom_t<mod> inv(int degree) const {
-        assert(!empty() && (*this)[0] != T(0) && "polynom is not invertable");
-        polynom_t<mod> inv(std::min(degree, INV_BRUTE_FORCE_SIZE)), have(inv.size());
-        T start_inv = T(1) / (*this)[0];
+    polynom_t<mint> inv(int degree) const {
+        assert(!empty() && (*this)[0] != mint(0) && "polynom is not invertable");
+        polynom_t<mint> inv(std::min(degree, INV_BRUTE_FORCE_SIZE)), have(inv.size());
+        mint start_inv = mint(1) / (*this)[0];
         for (int i = 0; i < int(inv.size()); i++) {
-            inv[i] = ((i == 0 ? T(1) : T(0)) - have[i]) * start_inv;
+            inv[i] = ((i == 0 ? mint(1) : mint(0)) - have[i]) * start_inv;
             int steps = std::min<int>(size(), int(have.size()) - i);
             for (int j = 0; j < steps; j++)
                 have[i + j] += inv[i] * (*this)[j];
         }
         for (int power = inv.size(); power < degree; power <<= 1) {
-            inv *= (polynom_t<mod>({2})
-                - (polynom_t<mod>(begin(), begin() + std::min<int>(size(), power << 1)) * inv).resize(power << 1));
+            inv *= (polynom_t<mint>({2})
+                - (polynom_t<mint>(begin(), begin() + std::min<int>(size(), power << 1)) * inv).resize(power << 1));
             inv.resize(std::min(degree, power << 1));
         }
         return inv.resize(degree);
@@ -278,19 +259,19 @@ public:
 
     // Returns log(p) modulo x^{degree}.
     // O(nlog).
-    polynom_t<mod> log(int degree) const {
-        assert(!empty() && (*this)[0] == T(1) && "log is not defined");
-        return (derivative().resize(degree) * inv(degree)).resize(degree).integral(T(0)).resize(degree);
+    polynom_t<mint> log(int degree) const {
+        assert(!empty() && (*this)[0] == mint(1) && "log is not defined");
+        return (derivative().resize(degree) * inv(degree)).resize(degree).integral(mint(0)).resize(degree);
     }
 
     // Returns exp(p) modulo x^{degree}.
     // O(nlog), but with a huge constant.
-    polynom_t<mod> exp(int degree) const {
-        assert(!empty() && (*this)[0] == T(0) && "exp is not defined");
-        polynom_t<mod> exp{1};
+    polynom_t<mint> exp(int degree) const {
+        assert(!empty() && (*this)[0] == mint(0) && "exp is not defined");
+        polynom_t<mint> exp{1};
         for (int power = 1; power < degree; power <<= 1) {
-            exp *= (polynom_t<MOD>{1} - exp.log(power << 1)
-                + polynom_t<MOD>(begin(), begin() + std::min<int>(size(), power << 1)));
+            exp *= (polynom_t<mint>{1} - exp.log(power << 1)
+                + polynom_t<mint>(begin(), begin() + std::min<int>(size(), power << 1)));
             exp.resize(std::min(degree, power << 1));
         }
         exp.resize(degree);
@@ -299,30 +280,30 @@ public:
 
     // Returns p^{d} modulo x^{degree}.
     // O(nlog), but with a very huge constant.
-    polynom_t<mod> power(int64_t d, int degree) const {
+    polynom_t<mint> power(int64_t d, int degree) const {
         if (!d || !degree)
-            return polynom_t<mod>{1}.resize(degree);
+            return polynom_t<mint>{1}.resize(degree);
 
         int pos = 0;
-        while (pos < int(size()) && (*this)[pos] == T(0))
+        while (pos < int(size()) && (*this)[pos] == mint(0))
             pos++;
 
         if (pos == int(size()) || pos >= (degree + d - 1) / d)
-            return polynom_t<mod>(degree);
+            return polynom_t<mint>(degree);
 
         int coeffs_left = degree - d * pos;
-        polynom_t<mod> result = ((polynom_t<mod>(begin() + pos, end()) / (*this)[pos]).log(coeffs_left)
-                            * T(d)).exp(coeffs_left) * (*this)[pos].power(d);
+        polynom_t<mint> result = ((polynom_t<mint>(begin() + pos, end()) / (*this)[pos]).log(coeffs_left)
+                            * mint(d)).exp(coeffs_left) * (*this)[pos].power(d);
         result.resize(degree);
         for (int i = degree - 1; i - (degree - coeffs_left) >= 0; i--)
             result[i] = result[i - (degree - coeffs_left)];
 
-        std::fill(result.begin(), result.end() - coeffs_left, T(0));
+        std::fill(result.begin(), result.end() - coeffs_left, mint(0));
         return result;
     }
 
     template<typename V>
-    std::enable_if_t<!std::is_same_v<V, polynom_t<mod>>, polynom_t<mod>&> operator*=(const V &value) {
+    std::enable_if_t<!std::is_same_v<V, polynom_t<mint>>, polynom_t<mint>&> operator*=(const V &value) {
         for (auto &x : *this)
             x *= value;
 
@@ -330,14 +311,14 @@ public:
     }
 
     template<typename V>
-    std::enable_if_t<!std::is_same_v<V, polynom_t<mod>>, polynom_t<mod>&> operator/=(const V &value) {
+    std::enable_if_t<!std::is_same_v<V, polynom_t<mint>>, polynom_t<mint>&> operator/=(const V &value) {
         for (auto &x : *this)
             x /= value;
 
         return *this;
     }
 
-    friend std::ostream& operator<<(std::ostream &out, const polynom_t<mod> &p) {
+    friend std::ostream& operator<<(std::ostream &out, const polynom_t<mint> &p) {
         for (int i = 0; i < int(p.size()); i++) {
             if (i) out << ' ';
             out << p[i];
@@ -345,49 +326,49 @@ public:
         return out;
     }
 
-    friend polynom_t<mod> operator+(const polynom_t<mod> &p, const polynom_t<mod> &q) {
+    friend polynom_t<mint> operator+(const polynom_t<mint> &p, const polynom_t<mint> &q) {
         return polynom_t(p) += q;
     }
 
-    friend polynom_t<mod> operator-(const polynom_t<mod> &p, const polynom_t<mod> &q) {
+    friend polynom_t<mint> operator-(const polynom_t<mint> &p, const polynom_t<mint> &q) {
         return polynom_t(p) -= q;
     }
 
-    friend polynom_t<mod> operator*(const polynom_t<mod> &p, const polynom_t<mod> &q) {
+    friend polynom_t<mint> operator*(const polynom_t<mint> &p, const polynom_t<mint> &q) {
         return polynom_t(p) *= q;
     }
 
-    friend polynom_t<mod> operator/(const polynom_t<mod> &p, const polynom_t<mod> &q) {
+    friend polynom_t<mint> operator/(const polynom_t<mint> &p, const polynom_t<mint> &q) {
         return polynom_t(p) /= q;
     }
 
-    friend polynom_t<mod> operator%(const polynom_t<mod> &p, const polynom_t<mod> &q) {
+    friend polynom_t<mint> operator%(const polynom_t<mint> &p, const polynom_t<mint> &q) {
         return polynom_t(p) %= q;
     }
 
     template<typename V>
-    friend std::enable_if_t<!std::is_same_v<V, polynom_t<mod>>, polynom_t<mod>>
-        operator*(const V &value, const polynom_t<mod> &p) {
-        return polynom_t<mod>(p) *= value;
+    friend std::enable_if_t<!std::is_same_v<V, polynom_t<mint>>, polynom_t<mint>>
+        operator*(const V &value, const polynom_t<mint> &p) {
+        return polynom_t<mint>(p) *= value;
     }
 
     template<typename V>
-    friend std::enable_if_t<!std::is_same_v<V, polynom_t<mod>>, polynom_t<mod>>
-        operator*(const polynom_t<mod> &p, const V &value) {
-        return polynom_t<mod>(p) *= value;
+    friend std::enable_if_t<!std::is_same_v<V, polynom_t<mint>>, polynom_t<mint>>
+        operator*(const polynom_t<mint> &p, const V &value) {
+        return polynom_t<mint>(p) *= value;
     }
 
     template<typename V>
-    friend std::enable_if_t<!std::is_same_v<V, polynom_t<mod>>, polynom_t<mod>>
-        operator/(const V &value, const polynom_t<mod> &p) {
-        return polynom_t<mod>(p) /= value;
+    friend std::enable_if_t<!std::is_same_v<V, polynom_t<mint>>, polynom_t<mint>>
+        operator/(const V &value, const polynom_t<mint> &p) {
+        return polynom_t<mint>(p) /= value;
     }
 
     template<typename V>
-    friend std::enable_if_t<!std::is_same_v<V, polynom_t<mod>>, polynom_t<mod>>
-        operator/(const polynom_t<mod> &p, const V &value) {
-        return polynom_t<mod>(p) /= value;
+    friend std::enable_if_t<!std::is_same_v<V, polynom_t<mint>>, polynom_t<mint>>
+        operator/(const polynom_t<mint> &p, const V &value) {
+        return polynom_t<mint>(p) /= value;
     }
 };
 
-using polynom = polynom_t<MOD>;
+using polynom = polynom_t<mint>;
