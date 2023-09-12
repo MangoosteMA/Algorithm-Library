@@ -33,7 +33,7 @@ public:
     montgomery(const mint &x) : value(x.value) {}
 
     template<typename T, typename U = std::enable_if_t<std::is_integral<T>::value>>
-    montgomery(const T &x) : value(!x ? 0 : reduce(int64_t(x % mod + mod) * neg_mod)) {}
+    montgomery(const T &x) : value(!x ? 0 : reduce(int64_t(x % int32_t(mod) + int32_t(mod)) * neg_mod)) {}
 
     uint32_t get() const {
         auto real_value = reduce(value);
