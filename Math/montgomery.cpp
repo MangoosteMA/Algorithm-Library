@@ -1,6 +1,6 @@
 /*
  * MOD must be prime.
- * MOD should be less than 2^30.
+ * MOD must be less than 2^30.
 */
 
 template<uint32_t mod>
