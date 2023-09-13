@@ -21,7 +21,7 @@ private:
     static constexpr int MUL_MAX_CUT = 1 << 6;
     static constexpr int DIV_N_CUT = 1 << 7;
     static constexpr int DIV_M_CUT = 1 << 6;
-    static constexpr int INV_BRUTE_FORCE_SIZE = 1 << 7;
+    static constexpr int INV_BRUTE_FORCE_SIZE = 1 << 3;
 
     static void fft(polynom_t<mint> &a) {
         int n = a.size();
@@ -40,6 +40,17 @@ private:
                     b[(i >> 1) + j + (n >> 1)] = u - v;
                 }
         }
+    }
+
+    static void inv_fft(polynom_t<mint> &a) {
+        if (a.empty())
+            return;
+
+        fft(a);
+        mint inv_n = mint(a.size()).inv();
+        reverse(a.begin() + 1, a.end());
+        for (auto &x : a)
+            x *= inv_n;
     }
 
 public:
@@ -164,13 +175,8 @@ public:
         for (int i = 0; i < n; i++)
             (*this)[i] *= b[i];
 
-        fft(*this);
-        std::reverse(begin() + 1, end());
-        mint inv_n = mint(1) / mint(n);
+        inv_fft(*this);
         resize(real_size);
-        for (auto &x : *this)
-            x *= inv_n;
-
         return *this;
     }
 
@@ -238,18 +244,51 @@ public:
     // O(nlog).
     polynom_t<mint> inv(int degree) const {
         assert(!empty() && (*this)[0] != mint(0) && "polynom is not invertable");
-        polynom_t<mint> inv(std::min(degree, INV_BRUTE_FORCE_SIZE)), have(inv.size());
-        mint start_inv = mint(1) / (*this)[0];
-        for (int i = 0; i < int(inv.size()); i++) {
-            inv[i] = ((i == 0 ? mint(1) : mint(0)) - have[i]) * start_inv;
-            int steps = std::min<int>(size(), int(have.size()) - i);
+
+        int result_size = 1;
+        while (result_size < degree)
+            result_size <<= 1;
+
+        polynom_t<mint> inv(result_size);
+        inv[0] = (*this)[0].inv();
+
+        int brute_calculation = std::min(degree, INV_BRUTE_FORCE_SIZE);
+        mint start_inv = (*this)[0].inv();
+
+        polynom_t<mint> have(brute_calculation);
+        for (int i = 0; i < brute_calculation; i++) {
+            inv[i] = ((i == 0 ? 1 : 0) - have[i]) * start_inv;
+            int steps = std::min<int>(size(), have.size() - i);
             for (int j = 0; j < steps; j++)
                 have[i + j] += inv[i] * (*this)[j];
         }
-        for (int power = inv.size(); power < degree; power <<= 1) {
-            inv *= (polynom_t<mint>({2})
-                - (polynom_t<mint>(begin(), begin() + std::min<int>(size(), power << 1)) * inv).resize(power << 1));
-            inv.resize(std::min(degree, power << 1));
+
+        polynom_t<mint> this_copy;
+        this_copy.reserve(result_size);
+        polynom_t<mint> inv_copy;
+        inv_copy.reserve(result_size);
+
+        for (int power = brute_calculation; power < degree; power <<= 1) {
+            this_copy.resize(power << 1);
+            std::fill(this_copy.begin() + min<int>(size(), power << 1), this_copy.end(), 0);
+            std::copy(begin(), begin() + min<int>(size(), power << 1), this_copy.begin());
+            inv_copy.resize(power << 1);
+            std::copy(inv.begin(), inv.begin() + power, inv_copy.begin());
+
+            fft(this_copy);
+            fft(inv_copy);
+            for (int i = 0; i < (power << 1); i++)
+                this_copy[i] *= inv_copy[i];
+
+            inv_fft(this_copy);
+            std::fill(this_copy.begin(), this_copy.begin() + power, 0);
+            fft(this_copy);
+            for (int i = 0; i < (power << 1); i++)
+                this_copy[i] *= inv_copy[i];
+
+            inv_fft(this_copy);
+            for (int i = power; i < (power << 1); i++)
+                inv[i] = -this_copy[i];
         }
         return inv.resize(degree);
     }
