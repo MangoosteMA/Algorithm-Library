@@ -1,3 +1,7 @@
+/*
+ * Include dynamic_montgomery to use it.
+*/
+
 namespace factorizer {
     using ull = unsigned long long;
 
@@ -72,52 +76,51 @@ namespace factorizer {
         if (is_prime(value) || value == 1)
             return value;
 
+        if (mint::get_mod() != value)
+            mint::set_mod(value);
+
         static std::mt19937_64 rng(std::chrono::steady_clock::now().time_since_epoch().count());
-        for (ull length = 1ull << max(int(__lg(value)) / 4, 0);; length <<= 1) {
-            ull x = rng() % (value - 1) + 1;
-            ull y = x;
-            ull random_factor = rng() % (value - 1) + 1;
+        const mint ONE = 1;
+        while (true) {
+            mint random_factor = rng() % (value - 1) + 1;
 
-            auto f = [&](ull x) {
-                ull res = helpers::mult(x, x, value) + random_factor;
-                return res >= value ? res - value : res;
+            auto f = [&](mint x) {
+                return x * x + random_factor;
             };
 
-            auto diff = [&](ull a, ull b) {
-                a += value - b;
-                return a >= value ? a - value : a;
-            };
+            mint x = rng() % (value - 2) + 2;
+            mint y = x;
+            ull g = 1;
+            while (g == 1) {
+                mint prod = ONE;
+                mint save_x = x;
+                mint save_y = y;
 
-            const ull step = min(length, 1ull << 5);
-            for (ull i = 0; i < length / step; i++) {
-                ull save_x = x, save_y = y, prod = 1;
-                for (ull j = 0; j < step; j++) {
-                    if (x != y)
-                        prod = helpers::mult(prod, diff(x, y), value);
-                    
+                static constexpr int STEP = 128;
+                for (int i = 0; i < STEP; i++) {
                     x = f(x);
                     y = f(f(y));
+                    prod *= x - y;
                 }
 
-                ull g = std::gcd(prod, value);
+                g = std::gcd(prod.get(), value);
                 if (g == 1)
                     continue;
 
                 x = save_x;
                 y = save_y;
-                for (ull j = 0; j < step; j++) {
-                    if (x != y) {
-                        g = std::gcd(diff(x, y), value);
-                        if (g != 1)
-                            return g;
-                    }
+                for (int i = 0; i < STEP; i++) {
                     x = f(x);
                     y = f(f(y));
+                    g = std::gcd((x - y).get(), value);
+                    if (g != 1)
+                        break;
                 }
-                assert(false);
+
+                if (g != 1 && g != value)
+                    return g;
             }
         }
-        assert(false);
     }
 
     // If n is divisible by p^d and not divisible by p^{d + 1} then p will occur d times.
