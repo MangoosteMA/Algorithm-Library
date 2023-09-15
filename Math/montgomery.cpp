@@ -36,8 +36,8 @@ public:
     montgomery(const T &x) : value(!x ? 0 : reduce(int64_t(x % int32_t(mod) + int32_t(mod)) * neg_mod)) {}
 
     static constexpr uint32_t get_mod() {
-		return mod;
-	}
+        return mod;
+    }
 
     uint32_t get() const {
         auto real_value = reduce(value);
