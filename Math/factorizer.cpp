@@ -5,23 +5,6 @@
 namespace factorizer {
     using ull = unsigned long long;
 
-    namespace helpers {
-        using ui128 = __uint128_t;
-
-        ull mult(ull a, ull b, ull mod) {
-            return ui128(a) * b % mod;
-        }
-
-        ull power(ull a, ull deg, ull mod) {
-            ull res = 1;
-            for (; deg; deg >>= 1, a = mult(a, a, mod))
-                if (deg & 1)
-                    res = mult(res, a, mod);
-
-            return res;
-        }
-    } // namespace helpers
-
     bool is_prime(ull value) {
         if (value < 2)
             return false;
@@ -34,23 +17,29 @@ namespace factorizer {
                 return false;
         }
 
+        if (mint::get_mod() != value)
+            mint::set_mod(value);
+
         ull d = value - 1;
         int s = __builtin_ctzll(d);
         d >>= s;
+
+        const mint ONE = 1;
+        const mint NEG_ONE = -1;
 
         auto miller_rabin = [&](ull base) {
             if (base == 0)
                 return true;
 
-            ull y = helpers::power(base, d, value);
-            if (y == 1)
+            mint y = mint(base).power(d);
+            if (y == ONE)
                 return true;
 
             for (int i = 0; i < s; i++) {
-                if (y == value - 1)
+                if (y == NEG_ONE)
                     return true;
 
-                y = helpers::mult(y, y, value);
+                y *= y;
             }
             return false;
         };
