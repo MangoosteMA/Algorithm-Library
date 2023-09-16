@@ -107,6 +107,10 @@ public:
     dynamic_montgomery operator-() const {
         return dynamic_montgomery(0) - *this;
     }
+
+    bool operator==(const dynamic_montgomery &another) const {
+        return value == another.value;
+    }
 };
 
 using mint = dynamic_montgomery;
