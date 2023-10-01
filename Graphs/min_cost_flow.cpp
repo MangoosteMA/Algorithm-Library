@@ -76,7 +76,7 @@ struct min_cost_flow {
         };
 
         while (flow < flow_limit && dijkstra()) {
-            T delta = dist[sink].second;
+            T delta = std::min(dist[sink].second, flow_limit - flow);
             flow += delta;
 
             for (int v = sink; v != source; v = parent[v].first) {
