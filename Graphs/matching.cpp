@@ -18,7 +18,7 @@ struct matching {
     std::vector<int> used;
     int pairs = 0;
 
-    bool khun(int v) {
+    bool kuhn(int v) {
         if (used[v] == pairs + 1)
             return false;
 
@@ -31,7 +31,7 @@ struct matching {
             }
 
         for (auto u : g[v])
-            if (khun(p_right[u])) {
+            if (kuhn(p_right[u])) {
                 p_right[u] = v;
                 p_left[v] = u;
                 return true;
@@ -55,7 +55,7 @@ struct matching {
 
         pairs = 0;
         for (int v : order)
-            pairs += khun(v);
+            pairs += kuhn(v);
 
         return pairs;
     }
