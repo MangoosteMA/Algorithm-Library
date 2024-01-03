@@ -1,8 +1,8 @@
 template<int SZ>
 struct hash_t {
-    static bool initialized;
-    static int MOD[SZ], BASE[SZ];
-    static std::vector<int> POWER[SZ];
+    inline static bool initialized = false;
+    inline static int MOD[SZ], BASE[SZ];
+    inline static std::vector<int> POWER[SZ];
 
     static void initialize() {
         assert(!initialized);
@@ -108,8 +108,3 @@ struct hash_t {
         return hash_t<SZ>(left) -= right;
     }
 };
-
-template<int SZ> bool hash_t<SZ>::initialized = false;
-template<int SZ> int hash_t<SZ>::MOD[SZ] = {};
-template<int SZ> int hash_t<SZ>::BASE[SZ] = {};
-template<int SZ> std::vector<int> hash_t<SZ>::POWER[SZ] = {};
