@@ -53,7 +53,7 @@ sparse_table<int, decltype(merge_min)> sparse(a, merge_min);
 For finding the index of the minimum element:
 std::vector<int> sparse_init(n);
 std::iota(sparse_init.begin(), sparse_init.end(), 0);
-auto merge_min = [](int i, int j) {
+auto merge_min = [&](int i, int j) {
     return a[i] < a[j] ? i : j;
 };
 sparse_table<int, decltype(merge_min)> sparse(sparse_init, merge_min);
