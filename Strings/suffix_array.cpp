@@ -16,7 +16,7 @@ struct suffix_array {
         for (int i = 0; i < n; i++)
             suffix_position[order[i]] = i == 0 ? 0 : suffix_position[order[i - 1]] + (str[order[i]] != str[order[i - 1]]);
 
-        std::vector<int> ptr(n), new_order(n), new_suffix_positoin(n);
+        std::vector<int> ptr(n), new_order(n), new_suffix_position(n);
         for (int len = 1; suffix_position[order.back()] != n - 1; len <<= 1) {
             std::fill(ptr.begin(), ptr.begin() + suffix_position[order.back()] + 1, 0);
             for (int i = 0; i < n; i++)
@@ -33,11 +33,11 @@ struct suffix_array {
             std::swap(order, new_order);
 
             for (int i = 0; i < n; i++)
-                new_suffix_positoin[order[i]] = i == 0 ? 0 : new_suffix_positoin[order[i - 1]]
+                new_suffix_position[order[i]] = i == 0 ? 0 : new_suffix_position[order[i - 1]]
                 + (suffix_position[order[i]] != suffix_position[order[i - 1]]
                 || suffix_position[(order[i] + len) % n] != suffix_position[(order[i - 1] + len) % n]);
 
-            std::swap(suffix_position, new_suffix_positoin);
+            std::swap(suffix_position, new_suffix_position);
         }
         assert(order[0] == n - 1);
 
