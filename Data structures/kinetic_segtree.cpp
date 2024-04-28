@@ -46,7 +46,7 @@ class kinetic_segtree {
         }
 
         tree[v].melt = min({tree[v].melt, tree[v << 1].melt, tree[v << 1 | 1].melt});
-        assert(tree[v].melt >= 0);
+        assert(tree[v].melt > 0);
     }
 
     void apply(int v, int vl, int vr, ll delta_b, ll delta_temp) {
