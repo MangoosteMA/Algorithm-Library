@@ -23,7 +23,7 @@ struct line {
 };
 
 class kinetic_segtree {
- private:
+private:
     struct node {
         ll lazy_b = 0;
         ll lazy_temp = 0;
@@ -128,7 +128,7 @@ class kinetic_segtree {
         return min(query(v << 1, vl, vm, l, r), query(v << 1 | 1, vm, vr, l, r));
     }
 
- public:
+public:
     kinetic_segtree(const vector<line> &lines) : n(lines.size()), tree(4 * n) {
         build(1, 0, n, lines);
     }
