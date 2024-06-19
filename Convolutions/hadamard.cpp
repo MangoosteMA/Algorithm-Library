@@ -24,12 +24,12 @@ std::vector<result_t> hadamard(T1 a_begin, T1 a_end, T2 b_begin, T2 b_end) {
 
     a.resize(n);
     b.resize(n);
-    hadamard_transformation(a);
-    hadamard_transformation(b);
+    hadamard_convolution(a);
+    hadamard_convolution(b);
     for (int i = 0; i < n; i++)
         a[i] *= b[i];
 
-    hadamard_transformation(a);
+    hadamard_convolution(a);
     for (auto &x : a)
         x /= n;
 
