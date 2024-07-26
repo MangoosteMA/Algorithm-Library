@@ -15,9 +15,7 @@ private:
     int n;
     std::vector<edge> edges;
 
-    std::vector<bool> used;
     std::vector<std::vector<int>> g;
-
     int v_num, scc_num;
     std::vector<int> num, low, scc, st;
 
@@ -46,13 +44,17 @@ private:
         }
     }
 
-    void solve(int l, int r, const std::vector<int> &vset, const std::vector<int> &eset,
-               T &dsu, std::vector<std::vector<std::pair<int, int>>> &unions) {
+    void solve(int l, int r, const std::vector<int> &eset, T &dsu,
+               std::vector<std::vector<std::pair<int, int>>> &unions) {
         v_num = scc_num = 0;
-        for (auto v : vset) {
-            g[v].clear();
-            used[v] = false;
-            num[v] = low[v] = scc[v] = -1;
+        for (auto i : eset) {
+            if (i >= r) {
+                continue;
+            }
+            for (auto v : {dsu.root(edges[i].from), dsu.root(edges[i].to)}) {
+                g[v].clear();
+                num[v] = low[v] = scc[v] = -1;
+            }
         }
 
         for (auto i : eset) {
@@ -65,14 +67,15 @@ private:
             }
         }
 
-        for (auto v : vset) {
-            if (num[v] == -1) {
-                tarjan(v);
+        for (auto i : eset) {
+            if (i <= r) {
+                int v = dsu.root(edges[i].from);
+                if (num[v] == -1) {
+                    tarjan(v);
+                }
             }
         }
 
-        std::vector<int> nvset;
-        nvset.reserve(vset.size());
         std::vector<int> neset;
         neset.reserve(eset.size());
 
@@ -80,24 +83,16 @@ private:
             if (i < r) {
                 int v = dsu.root(edges[i].from);
                 int u = dsu.root(edges[i].to);
-                if (v == u || scc[v] != scc[u]) {
-                    continue;
-                }
-
-                neset.push_back(i);
-                for (auto x : {v, u}) {
-                    if (!used[x]) {
-                        used[x] = true;
-                        nvset.push_back(x);
-                    }
+                if (v != u && scc[v] == scc[u]) {
+                    neset.push_back(i);
                 }
             }
         }
 
         if (r - l > 1) {
             int m = (l + r) / 2;
-            solve(l, m, nvset, neset, dsu, unions);
-            solve(m, r, nvset, neset, dsu, unions);
+            solve(l, m, neset, dsu, unions);
+            solve(m, r, neset, dsu, unions);
             return;
         }
 
@@ -109,7 +104,7 @@ private:
     }
 
 public:
-    scc_ofline(int n = 0) : n(n), used(n), g(n), num(n), low(n), scc(n) {}
+    scc_ofline(int n = 0) : n(n), g(n), num(n), low(n), scc(n) {}
 
     // Adds directed edge (from -> to)
     void add(int from, int to) {
@@ -121,12 +116,10 @@ public:
         T dsu(n);
         std::vector<std::vector<std::pair<int, int>>> unions(edges.size());
 
-        std::vector<int> vset(n);
-        std::iota(vset.begin(), vset.end(), 0);
         std::vector<int> eset(edges.size());
         std::iota(eset.begin(), eset.end(), 0);
 
-        solve(0, edges.size(), vset, eset, dsu, unions);
+        solve(0, edges.size(), eset, dsu, unions);
         return unions;
     }
 };
