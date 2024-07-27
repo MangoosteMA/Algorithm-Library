@@ -1,114 +1,124 @@
-struct strongly_connected_components {
+class strongly_connected_components {
+private:
     int n;
     std::vector<std::vector<int>> g;
 
-    strongly_connected_components(int n = 0) : n(n), g(n) {}
+    int cur_id, cur_scc;
+    std::vector<int> id, f, scc, st;
 
-    int size() const {
-        return n;
+    void dfs(int v) {
+        st.push_back(v);
+        id[v] = f[v] = cur_id++;
+
+        for (auto u : g[v]) {
+            if (id[u] == -1) {
+                dfs(u);
+                f[v] = std::min(f[v], f[u]);
+            } else if (scc[u] == -1) {
+                f[v] = std::min(f[v], id[u]);
+            }
+        }
+
+        if (id[v] == f[v]) {
+            int u;
+            do {
+                u = st.back();
+                st.pop_back();
+                scc[u] = cur_scc;
+            } while (u != v);
+            cur_scc++;
+        }
     }
 
+public:
+    strongly_connected_components(int n = 0) : n(n), g(n) {}
+
+    // Adds directed edge (from -> to)
     void add(int from, int to) {
-        assert(0 <= from && from < n);
-        assert(0 <= to && to < n);
         g[from].push_back(to);
     }
 
-    // Returns for each vertex the scc id from [0, number_of_scc).
-    // If u is reachable from v, then scc[v] <= scc[u].
-    std::vector<int> scc() const {
-        std::vector<int> num(n, -1), low(n), scc(n, -1), st;
-        int v_num = 0, scc_num = 0;
+    // Returns for each vertex the scc index from [0, number_of_scc).
+    // If u is reachable from v, then scc_index[v] <= scc_index[u].
+    std::vector<int> solve() {
+        cur_id = cur_scc = 0;
+        id.assign(n, -1);
+        f.assign(n, -1);
+        scc.assign(n, -1);
 
-        std::function<void(int)> tarjan = [&](int v) {
-            st.push_back(v);
-            num[v] = low[v] = v_num++;
-            for (auto u : g[v]) 
-                if (num[u] == -1) {
-                    tarjan(u);
-                    low[v] = std::min(low[v], low[u]);
-                } else if (scc[u] == -1) {
-                    low[v] = std::min(low[v], num[u]);
-                }
-
-            if (num[v] == low[v]) {
-                while (true) {
-                    int u = st.back();
-                    st.pop_back();
-                    scc[u] = scc_num;
-                    if (u == v)
-                        break;
-                }
-                scc_num++;
+        for (int v = 0; v < n; v++) {
+            if (id[v] == -1) {
+                dfs(v);
             }
-        };
+        }
 
-        for (int v = 0; v < n; v++)
-            if (num[v] == -1)
-                tarjan(v);
-
-        assert(st.empty());
-        for (auto &x : scc)
-            x = scc_num - 1 - x;
-
+        for (auto &x : scc) {
+            x = cur_scc - 1 - x;
+        }
         return scc;
     }
 };
 
-struct strongly_connected_components {
+class strongly_connected_components {
+private:
     int n;
-    std::vector<std::vector<int>> g, rev_g;
+    std::vector<std::vector<int>> g;
+    std::vector<std::vector<int>> ig;
 
-    strongly_connected_components(int n = 0) : n(n), g(n), rev_g(n) {}
+    std::vector<bool> used;
+    std::vector<int> ord;
 
-    int size() const {
-        return n;
-    }
+    int cur_scc = 0;
+    std::vector<int> scc;
 
-    void add(int from, int to) {
-        assert(0 <= from && from < n);
-        assert(0 <= to && to < n);
-        g[from].push_back(to);
-        rev_g[to].push_back(from);
-    }
-
-    // Returns for each vertex the scc id from [0, number_of_scc).
-    // If u is reachable from v, then scc[v] <= scc[u].
-    std::vector<int> scc() const {
-        std::vector<int> order;
-        order.reserve(n);
-        std::vector<char> used(n);
-
-        std::function<void(int)> dfs_order = [&](int v) {
-            used[v] = 1;
-            for (auto u : g[v])
-                if (!used[u])
-                    dfs_order(u);
-
-            order.push_back(v);
-        };
-
-        for (int i = 0; i < n; i++)
-            if (!used[i])
-                dfs_order(i);
-
-        std::reverse(order.begin(), order.end());
-        int current_num = 0;
-        std::vector<int> scc_num(n, -1);
-
-        std::function<void(int)> dfs_fill = [&](int v) {
-            scc_num[v] = current_num;
-            for (auto u : rev_g[v])
-                if (scc_num[u] == -1)
-                    dfs_fill(u);
-        };
-
-        for (auto i : order)
-            if (scc_num[i] == -1) {
-                dfs_fill(i);
-                current_num++;
+    void dfs_topsort(int v) {
+        used[v] = true;
+        for (auto u : g[v]) {
+            if (!used[u]) {
+                dfs_topsort(u);
             }
+        }
+        ord.push_back(v);
+    }
 
-        return scc_num;
+    void dfs_scc(int v) {
+        scc[v] = cur_scc;
+        for (auto u : ig[v]) {
+            if (scc[u] == -1) {
+                dfs_scc(u);
+            }
+        }
+    }
+
+public:
+    strongly_connected_components(int n = 0) : n(n), g(n), ig(n) {}
+
+    // Adds directed edge (from -> to)
+    void add(int from, int to) {
+        g[from].push_back(to);
+        ig[to].push_back(from);
+    }
+
+    // Returns for each vertex its scc index (0-indexed).
+    // If u is reachable from v, then scc_index[v] <= scc_index[u].
+    std::vector<int> solve() {
+        used.assign(n, false);
+        ord.clear();
+        for (int v = 0; v < n; v++) {
+            if (!used[v]) {
+                dfs_topsort(v);
+            }
+        }
+        std::reverse(ord.begin(), ord.end());
+
+        cur_scc = 0;
+        scc.assign(n, -1);
+        for (auto v : ord) {
+            if (scc[v] == -1) {
+                dfs_scc(v);
+                cur_scc++;
+            }
+        }
+        return scc;
     }
 };
