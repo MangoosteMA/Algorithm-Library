@@ -1,5 +1,5 @@
 /*
- ! WARNING: hash works only for 32-bit types if 64-bit is required, reduce it to two 32-bits values.
+ ! WARNING: hash works only for 32-bit types. If 64-bit is required, reduce it to two 32-bits values.
  ! WARNING: addition and subtraction of hashes work in O(64).
  * DIMS is the number of bases for hash to use.
  * Bases are generated automatically, there's no need to run any init function.
