@@ -1,8 +1,8 @@
-struct disjoin_set_union {
+struct disjoint_set_union {
     int components;
     std::vector<int> f;
 
-    disjoin_set_union(int n = 0) : components(n), f(n, -1) {}
+    disjoint_set_union(int n = 0) : components(n), f(n, -1) {}
 
     int size() const {
         return f.size();

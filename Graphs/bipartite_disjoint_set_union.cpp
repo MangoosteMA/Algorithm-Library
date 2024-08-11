@@ -1,4 +1,4 @@
-struct bipartite_disjoin_set_union {
+struct bipartite_disjoint_set_union {
     std::vector<int> par, rank, value;
     bool bipartite = true;
 
@@ -8,7 +8,7 @@ struct bipartite_disjoin_set_union {
     };
     std::vector<update> updates;
 
-    bipartite_disjoin_set_union(int n = 0) : par(n), rank(n, 1), value(n) {
+    bipartite_disjoint_set_union(int n = 0) : par(n), rank(n, 1), value(n) {
         std::iota(par.begin(), par.end(), 0);
     }
 
