@@ -23,16 +23,18 @@ T mod_sum(T k, T b, ll m, ll n) {
     return n * (n - 1) / 2 * k + n * b - m * floor_sum(k, b, m, n);
 }
 
-// Returns the number of 0 <= x < n, such that kx mod m <= v
-// Require: k >= 0, m > 0, n >= 0
+// Returns the number of 0 <= x < n, such that (kx + b) mod m <= v
+// Require: m > 0, n >= 0
 // WARNING: careful with overflow. Don't forget to specify large enough to fit floor_sum type T.
 template<typename T>
-T count_remainders(T k, T v, T m, T n) {
+T count_remainders(T k, T b, T v, T m, T n) {
     if (v < 0) {
         return 0;
     }
     if (v >= m - 1) {
         return n;
     }
-    return (mod_sum<T>(k, m - v - 1, m, n) - mod_sum<T>(k, 0, m, n) + n * (v + 1)) / m;
+    k = (k % m + m) % m;
+    b = (b % m + m) % m;
+    return (mod_sum<T>(k, b + m - v - 1, m, n) - mod_sum<T>(k, b, m, n) + n * (v + 1)) / m;
 }
