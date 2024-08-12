@@ -34,7 +34,5 @@ T count_remainders(T k, T b, T v, T m, T n) {
     if (v >= m - 1) {
         return n;
     }
-    k = (k % m + m) % m;
-    b = (b % m + m) % m;
     return (mod_sum<T>(k, b + m - v - 1, m, n) - mod_sum<T>(k, b, m, n) + n * (v + 1)) / m;
 }
