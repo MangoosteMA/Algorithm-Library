@@ -124,7 +124,7 @@ public:
         return length;
     }
 
-    // Require x.size() == b.size()
+    // Require x.size() == y.size()
     static xor_friendly_hash merge(const xor_friendly_hash &x, const xor_friendly_hash &y) {
         assert(x.size() == y.size());
         xor_friendly_hash merged;
