@@ -19,7 +19,7 @@ public:
     using Tl = uint64_t;
 
     inline static constexpr int LG = 31;
-    inline static constexpr Tl BASE_MASK = (static_cast<Tl>(1) << (LG + 1)) + 15;
+    inline static constexpr Tl BASE_MASK = (static_cast<Tl>(1) << (LG + 1)) + 141;
 
 private:
     inline static bool initialized = false;
