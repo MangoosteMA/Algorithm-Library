@@ -10,7 +10,6 @@
  * Merge:
      Merge(H([a_1,..., a_n]), H([b_1,..., b_n])) = H([a_1 ^ b_1,..., a_n ^ b_n])
  */
-
 template<int DIMS>
 class xor_friendly_hash {
 public:

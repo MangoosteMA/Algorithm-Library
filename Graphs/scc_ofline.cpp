@@ -4,7 +4,6 @@ Type T is disjoint_set_union like class with:
     - unite(v, u) (must return true if v and u were united)
     - root(v) (root vertex of component of vertex v)
 */
-
 template<typename T>
 class scc_ofline {
 private:

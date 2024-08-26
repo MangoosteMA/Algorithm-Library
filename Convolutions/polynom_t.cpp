@@ -1,9 +1,9 @@
 /*
- * Include static_modular_int or montgomery (a bit faster) to use it.
+ ! WARNING: don't initialize polynom_t like polynom{1, 2}.
+ * Include static_modular_int or montgomery (faster) to use it.
  * Don't need to care about precomputing primitive root.
- * Use it like vector<mint> with extra methods.
-*/
-
+ * Use it like std::vector<mint> with extra methods.
+ */
 template<typename mint>
 class polynom_t : public std::vector<mint> {
 public:
@@ -54,9 +54,6 @@ private:
     }
 
 public:
-    template<typename V>
-    polynom_t(const std::initializer_list<V> &lst) : std::vector<mint>(lst.begin(), lst.end()) {}
-
     template<typename... Args>
     polynom_t(Args&&... args) : std::vector<mint>(std::forward<Args>(args)...) {}
 
