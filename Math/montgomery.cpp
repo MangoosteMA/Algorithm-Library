@@ -1,8 +1,8 @@
 /*
- * MOD must be prime.
- * MOD must be less than 2^30.
-*/
-
+ ! WARNING: MOD must be prime.
+ ! WARNING: MOD must be less than 2^30.
+ * Use .get() to get the stored value.
+ */
 template<uint32_t mod>
 class montgomery {
     static_assert(mod < uint32_t(1) << 30, "mod < 2^30");
