@@ -25,7 +25,7 @@ namespace combinatorics {
         combinatorics_info(std::vector<mint> &data) : data(data) {}
 
         mint operator[](int pos) {
-            if (pos >= int(data.size())) {
+            if (pos >= static_cast<int>(data.size())) {
                 resize_data(pos);
             }
             return data[pos];
