@@ -71,7 +71,7 @@ private:
             int m = n >> (len + 1);
             mint r = 1;
             for (int i = 0; i < (1 << len); i++) {
-                // rot = r^((MOD - 1) / n * inv(i))
+                // rot = r^((MOD - 1) / n * rev(i))
                 int id = i << (l - len);
                 for (int j = 0; j < m; j++) {
                     auto u = a[id + j];
