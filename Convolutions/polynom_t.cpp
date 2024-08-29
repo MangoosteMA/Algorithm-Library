@@ -334,12 +334,20 @@ public:
             n <<= 1;
         }
 
-        resize(n);
-        polynom_t b = another;
-        b.resize(n);
-        fft(*this), fft(b);
-        for (int i = 0; i < n; i++) {
-            (*this)[i] *= b[i];
+        if ((*this) == another) {
+            resize(n);
+            fft(*this);
+            for (int i = 0; i < n; i++) {
+                (*this)[i] *= (*this)[i];
+            }
+        } else {
+            resize(n);
+            polynom_t b = another;
+            b.resize(n);
+            fft(*this), fft(b);
+            for (int i = 0; i < n; i++) {
+                (*this)[i] *= b[i];
+            }
         }
         inv_fft(*this);
         return resize(real_size);
