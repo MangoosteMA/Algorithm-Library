@@ -19,7 +19,6 @@ public:
     using std::vector<mint>::end;
 
 private:
-    static constexpr int EVAL_N = 1 << 5;
     static constexpr int MUL_MIN_CUT = 20;
     static constexpr int MUL_MAX_CUT = 1 << 6;
     static constexpr int DIV_N_CUT = 1 << 7;
@@ -32,18 +31,23 @@ private:
 
     public:
         mint root;
+        // roots[x] = root.power((MOD - 1) / 2^x)
+        // inv_roots[x] = roots[x].inv()
+        std::array<mint, RANK> roots, inv_roots;
         // inv_n[x] = 2^{-x}
         std::array<mint, RANK> inv_l;
         // r_transition[x] = root.power((MOD - 1) * (3 - 2^{x + 1}) / 2^{x + 2})
-        // r_transition_inv[x] = r_transition[x].inv()
-        std::array<mint, RANK> r_transition, r_transition_inv;
+        // inv_r_transition[x] = r_transition[x].inv()
+        std::array<mint, RANK> r_transition, inv_r_transition;
 
         fft_precalc() {
             root = mint::primitive_root();
             for (int x = 0; x < RANK; x++) {
+                roots[x] = mint(root).power((mint::get_mod() - 1) >> x);
+                inv_roots[x] = roots[x].inv();
                 inv_l[x] = mint(1 << x).inv();
                 r_transition[x] = root.power(((mint::get_mod() - 1) >> (x + 2)) * (3 + (1 << (x + 1))));
-                r_transition_inv[x] = r_transition[x].inv();
+                inv_r_transition[x] = r_transition[x].inv();
             }
         }
 
@@ -60,7 +64,7 @@ private:
     /*
      * Let r be the primitive root of the given MOD.
      * Let rev(i) be the reversed i as a binary mask of size log(n).
-     * Let R[i] = r.power((MOD - 1) / n * rev(i)).
+     * Let R[i] = r.power((MOD - 1) / a.size() * rev(i)).
      * It replaces a[i] with a.eval(R[i]).
      */
     static void fft(polynom_t<mint> &a) {
@@ -70,7 +74,7 @@ private:
             int m = n >> (len + 1);
             mint r = 1;
             for (int i = 0; i < (1 << len); i++) {
-                // rot = r^((MOD - 1) / n * rev(i))
+                // rot = r^((MOD - 1) / n * rev(2 * i))
                 int id = i << (l - len);
                 for (int j = 0; j < m; j++) {
                     auto u = a[id + j];
@@ -101,7 +105,54 @@ private:
                     a[id + j + m] = (u - v) * ir;
                 }
                 if (i + 1 < (1 << len)) {
-                    ir *= fft_data.r_transition_inv[__builtin_ctz(~i)];
+                    ir *= fft_data.inv_r_transition[__builtin_ctz(~i)];
+                }
+            }
+        }
+        for (auto &value : a) {
+            value *= fft_data.inv_l[l];
+        }
+    }
+
+    // Completes fft assuming that a is the right half of the polynomial after the first iteration of the fft.
+    static void right_half_fft(polynom_t<mint> &a) {
+        assert(!a.empty());
+        int n = a.size(), l = __builtin_ctz(n);
+        for (int len = 0; len < l; len++) {
+            int m = n >> (len + 1);
+            mint r = fft_data.roots[len + 2];
+            for (int i = 0; i < (1 << len); i++) {
+                int id = i << (l - len);
+                for (int j = 0; j < m; j++) {
+                    auto u = a[id + j];
+                    auto v = a[id + j + m] * r;
+                    a[id + j] = u + v;
+                    a[id + j + m] = u - v;
+                }
+                if (i + 1 < (1 << len)) {
+                    r *= fft_data.r_transition[__builtin_ctz(~i)];
+                }
+            }
+        }
+    }
+
+    // inv_right_half_fft(right_half_fft(a)) = a
+    static void inv_right_half_fft(polynom_t<mint> &a) {
+        assert(!a.empty());
+        int n = a.size(), l = __builtin_ctz(n);
+        for (int len = l - 1; len >= 0; len--) {
+            int m = n >> (len + 1);
+            mint ir = fft_data.inv_roots[len + 2];
+            for (int i = 0; i < (1 << len); i++) {
+                int id = i << (l - len);
+                for (int j = 0; j < m; j++) {
+                    auto u = a[id + j];
+                    auto v = a[id + j + m];
+                    a[id + j] = u + v;
+                    a[id + j + m] = (u - v) * ir;
+                }
+                if (i + 1 < (1 << len)) {
+                    ir *= fft_data.inv_r_transition[__builtin_ctz(~i)];
                 }
             }
         }
@@ -150,35 +201,79 @@ public:
     // Calculates eval at the given points.
     // O(n log^2).
     std::vector<mint> multipoint_evaluation(const std::vector<mint> &points) const {
-        const int n = points.size();
-        if (n == 0) {
-            return {};
+        const int n_points = points.size();
+        const int n = std::max(size(), points.size());
+        int l = 1;
+        while ((1 << l) < n) {
+            l++;
         }
-        const int tree_size = (n + EVAL_N - 1) / EVAL_N;
-        std::vector<polynom_t<mint>> tree(tree_size << 1);
-        for (int v = 0; v < tree_size; v++) {
-            int from = v * EVAL_N, to = std::min(n, from + EVAL_N);
-            tree[tree_size + v].resize(to - from + 1);
-            tree[tree_size + v][0] = 1;
-            for (int i = from; i < to; i++) {
-                for (int j = i - from; j >= 0; j--) {
-                    tree[tree_size + v][j + 1] += tree[tree_size + v][j];
-                    tree[tree_size + v][j] *= -points[i];
+
+        polynom_t<mint> aux;
+        std::vector<polynom_t<mint>> segtree(l + 1, polynom_t<mint>(1 << (l + 1)));
+        for (int i = 0; i < (1 << l); i++) {
+            aux = {-(i < n_points ? points[i] : 0), 1};
+            fft(aux);
+            segtree[0][i << 1] = aux[0];
+            segtree[0][(i << 1) + 1] = aux[1];
+        }
+
+        aux.reserve(1 << l);
+        for (int len = 0; len < l; len++) {
+            aux.resize(1 << (len + 1));
+            for (int i = 0; i < (1 << (l + 1)); i += (1 << (len + 2))) {
+                for (int j = 0; j < static_cast<int>(aux.size()); j++) {
+                    aux[j] = segtree[len][i + j] * segtree[len][i + j + aux.size()];
+                }
+                if (len + 1 < l) {
+                    std::copy(aux.begin(), aux.end(), segtree[len + 1].begin() + i);
+                    inv_fft(aux);
+                    aux[0] -= 2;
+                    right_half_fft(aux);
+                    std::copy(aux.begin(), aux.end(), segtree[len + 1].begin() + i + aux.size());
+                } else {
+                    inv_fft(aux);
+                    aux[0]--;
+                    std::copy(aux.begin(), aux.end(), segtree[len + 1].begin() + i);
+                    segtree[len + 1][1 << (len + 1)]++;
                 }
             }
         }
-        for (int v = tree_size - 1; v > 0; v--) {
-            tree[v] = tree[v << 1] * tree[v << 1 | 1];
+
+        std::reverse(segtree[l].begin(), segtree[l].begin() + 1 + (1 << l));
+        segtree[l].resize(1 << l);
+        segtree[l] = segtree[l].inv(1 << l);
+        std::reverse(segtree[l].begin(), segtree[l].end());
+        segtree[l].resize(1 << (l + 1));
+        fft(segtree[l]);
+
+        auto this_copy = *this;
+        this_copy.resize(1 << (l + 1));
+        std::rotate(this_copy.begin(), std::prev(this_copy.end()), this_copy.end());
+        fft(this_copy);
+        for (int i = 0; i < (1 << (l + 1)); i++) {
+            segtree[l][i] *= this_copy[i];
         }
-        tree[1] = (*this) % tree[1];
-        for (int v = 2; v < 2 * tree_size; v++) {
-            tree[v] = tree[v >> 1] % tree[v];
-        }
-        std::vector<mint> eval(n);
-        for (int v = 0; v < tree_size; v++) {
-            for (int i = v * EVAL_N; i < std::min(n, (v + 1) * EVAL_N); i++) {
-                eval[i] = tree[tree_size + v].eval(points[i]);
+
+        for (int len = l - 1; len >= 0; len--) {
+            aux.resize(1 << (len + 1));
+            for (int i = 0; i < (1 << (l + 1)); i += (1 << (len + 2))) {
+                for (int j = 0; j < static_cast<int>(aux.size()); j++) {
+                    aux[j] = segtree[l][i + j + (1 << (len + 1))];
+                }
+                inv_right_half_fft(aux);
+                fft(aux);
+                std::copy(aux.begin(), aux.end(), segtree[l].begin() + i + (1 << (len + 1)));
+                for (int j = 0; j < (1 << (len + 1)); j++) {
+                    auto x = segtree[l][i + j] - segtree[l][i + j + (1 << (len + 1))];
+                    segtree[l][i + j + (1 << (len + 1))] = x * segtree[len][i + j];
+                    segtree[l][i + j] = x * segtree[len][i + j + (1 << (len + 1))];
+                }
             }
+        }
+
+        std::vector<mint> eval(n_points);
+        for (int i = 0; i < n_points; i++) {
+            eval[i] = (segtree[l][2 * i] - segtree[l][2 * i + 1]) * fft_data.inv_l[l + 1];
         }
         return eval;
     }
@@ -238,8 +333,7 @@ public:
             (*this)[i] *= b[i];
         }
         inv_fft(*this);
-        resize(real_size);
-        return *this;
+        return resize(real_size);
     }
 
     // Division with remainder.
