@@ -4,8 +4,7 @@
  * Type T must have default constructor, which sets neutral value.
  * Operation += must be commutative.
  * For segment query type T must have operator -= T.
-*/
-
+ */
 template<typename T>
 struct binary_indexed_tree {
     std::vector<T> bit;
@@ -19,24 +18,25 @@ struct binary_indexed_tree {
 
     // Adds delta at the position pos.
     void add(int pos, T delta) {
-        for (pos++; pos < int(bit.size()); pos += pos & -pos)
+        for (pos++; pos < static_cast<int>(bit.size()); pos += pos & -pos) {
             bit[pos] += delta;
+        }
     }
 
-    // Returns sum on the interval [0, pref].
+    // Returns the sum on the segment [0, pref].
     T query(int pref) {
         T sum = T();
-        for (pref++; pref > 0; pref -= pref & -pref)
+        for (pref++; pref > 0; pref -= pref & -pref) {
             sum += bit[pref];
-
+        }
         return sum;
     }
 
-    // Returns sum on the interval [l, r).
+    // Returns the sum on the interval [l, r).
     T query(int l, int r) {
-        if (r <= l)
+        if (r <= l) {
             return T();
-
+        }
         T res = query(r - 1);
         res -= query(l - 1);
         return res;
@@ -45,10 +45,9 @@ struct binary_indexed_tree {
 
 /*
  * Zero based.
- * Type T must have same restriction as for binary_indexed_tree.
+ * Type T must have same restrictions as for binary_indexed_tree.
  * Type T must have operator -T.
-*/
-
+ */
 template<typename T>
 struct segment_adding_binary_indexed_tree {
     binary_indexed_tree<T> values;
@@ -74,8 +73,7 @@ struct segment_adding_binary_indexed_tree {
 /*
  * Zero based.
  * Works for signed integer types.
-*/
-
+ */
 template<typename T>
 struct segment_adding_segment_query_binary_indexed_tree {
     segment_adding_binary_indexed_tree<T> k, b;
@@ -88,24 +86,24 @@ struct segment_adding_segment_query_binary_indexed_tree {
 
     // Adding val on the interval [l, r).
     void add(int l, int r, T val) {
-        if (r <= l)
+        if (r <= l) {
             return;
-
+        }
         b.add(l, r, -(l - 1) * val);
         b.add(r, size(), (r - l) * val);
         k.add(l, r, val);
     }
 
-    // Returns the sum on the interval [0, pref].
+    // Returns the sum on the segment [0, pref].
     T query(int pref) {
         return b.at(pref) + pref * k.at(pref);
     }
 
     // Returns the sum on the interval [l, r).
     T query(int l, int r) {
-        if (r <= l)
+        if (r <= l) {
             return T();
-
+        }
         return query(r - 1) - query(l - 1);
     }
 };
