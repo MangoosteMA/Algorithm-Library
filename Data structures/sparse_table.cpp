@@ -1,28 +1,26 @@
 /*
  * Zero based.
- * Works for operations Op, such that Op(S) = Op(S, x), where x in S (like min, max, gcd...).
+ * Works for operations Op, such that Op(S) = Op(S \cup x), where x in S (like min, max, gcd...).
  * Operation must be commutative.
-*/
-
-template<typename T, typename merge_t>
-struct sparse_table {
+ */
+template<typename T, typename merge_t = std::function<T(T, T)>>
+class sparse_table {
+private:
     std::vector<std::vector<T>> sparse;
     const merge_t merge;
 
+public:
     sparse_table(const merge_t &merge) : merge(merge) {}
 
     sparse_table(const std::vector<T> &a, const merge_t &merge) : merge(merge) {
-        if (a.empty())
-            return;
-
-        const int n = int(a.size()), lg = std::__lg(n);
+        const int n = a.size(), lg = std::__lg(std::max(1, n));
         sparse.reserve(lg + 1);
         sparse.push_back(a);
-
         for (int level = 1; level <= lg; level++) {
             sparse.push_back(std::vector<T>(n - (1 << level) + 1));
-            for (int i = 0; i < int(sparse[level].size()); i++)
+            for (int i = 0; i < static_cast<int>(sparse[level].size()); i++) {
                 sparse[level][i] = merge(sparse[level - 1][i], sparse[level - 1][i + (1 << (level - 1))]);
+            }
         }
     }
 
