@@ -1,5 +1,4 @@
 /*
- ! WARNING: don't initialize polynom_t like polynom{1, 2}.
  ! WARNING: (MOD - 1) must be divisible by (2n), where n is max degree of polynomials.
  * Include static_modular_int or montgomery (faster) to use it.
  * Don't need to care about precomputing primitive root.
