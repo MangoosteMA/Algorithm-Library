@@ -19,6 +19,7 @@ public:
     using std::vector<mint>::end;
 
 private:
+    static constexpr int EVAL_BRUTE_SIZE = 1 << 4;
     static constexpr int MUL_MIN_CUT = 20;
     static constexpr int MUL_MAX_CUT = 1 << 6;
     static constexpr int DIV_N_CUT = 1 << 7;
@@ -201,6 +202,14 @@ public:
     // Calculates eval at the given points.
     // O(n log^2).
     std::vector<mint> multipoint_evaluation(const std::vector<mint> &points) const {
+        if (std::min(size(), points.size()) <= EVAL_BRUTE_SIZE) {
+            std::vector<mint> eval(points.size());
+            for (int i = 0; i < static_cast<int>(points.size()); i++) {
+                eval[i] = this->eval(points[i]);
+            }
+            return eval;
+        }
+
         const int n_points = points.size();
         const int n = std::max(size(), points.size());
         int l = 1;
