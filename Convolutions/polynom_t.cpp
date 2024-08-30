@@ -64,6 +64,7 @@ private:
 
     inline static fft_precalc fft_data;
 
+public:
     /*
      * Let r be the primitive root of the given MOD.
      * Let rev(i) be the reversed i as a binary mask of size log(n).
@@ -117,6 +118,7 @@ private:
         }
     }
 
+private:
     // Completes fft assuming that a is the right half of the polynomial after the first iteration of the fft.
     static void right_half_fft(polynom_t<mint> &a) {
         assert(!a.empty());
