@@ -10,6 +10,8 @@ public:
     static constexpr int RANK = __builtin_ctz(mint::get_mod() - 1);
     static_assert(RANK >= 15, "MOD doesn't seem fft-friendly.");
 
+    using value_type = mint;
+
     using std::vector<mint>::empty;
     using std::vector<mint>::back;
     using std::vector<mint>::pop_back;
