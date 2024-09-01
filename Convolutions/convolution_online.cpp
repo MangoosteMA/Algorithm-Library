@@ -2,9 +2,9 @@
  * T is a polynom-like class.
  * Initially f = 0 and g = 0.
  * Calling .push_back(a, b) makes:
-       f := f + a * x^{degree(f) + 1}
-       g := g + b * x^{degree(g) + 1}
- * .query(i) return [x^i](f * g). Require: i <= degree(f).
+       f := f + a * x^{size(f)}
+       g := g + b * x^{size(g)}
+ * .query(i) return [x^i](f * g). Require: i < size(f).
  */
 template<typename T>
 class convolution_online {
