@@ -4,7 +4,6 @@ Type T require to have:
     - operator+(T, T)
     - operator-(T, T)
 */
-
 template<typename T>
 class prefix_sums {
 private:
