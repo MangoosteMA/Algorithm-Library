@@ -166,6 +166,135 @@ private:
         }
     }
 
+    class multipoint_evaluation_tree {
+    private:
+        int n_points, l;
+        std::vector<polynom_t<mint>> segtree;
+
+    public:
+        multipoint_evaluation_tree(int n, const std::vector<mint> &points) : n_points(points.size()), l(1) {
+            while ((1 << l) < n) {
+                l++;
+            }
+            polynom_t<mint> aux;
+            aux.reserve(1 << l);
+
+            segtree.assign(l + 1, polynom_t<mint>(1 << (l + 1)));
+            for (int i = 0; i < (1 << l); i++) {
+                aux = {i < n_points ? -points[i] : 0, 1};
+                fft(aux);
+                segtree[0][i << 1] = aux[0];
+                segtree[0][i << 1 | 1] = aux[1];
+            }
+
+            for (int len = 0; len < l; len++) {
+                aux.resize(1 << (len + 1));
+                for (int i = 0; i < (1 << (l + 1)); i += (1 << (len + 2))) {
+                    for (int j = 0; j < static_cast<int>(aux.size()); j++) {
+                        aux[j] = segtree[len][i + j] * segtree[len][i + j + aux.size()];
+                    }
+                    if (len + 1 < l) {
+                        std::copy(aux.begin(), aux.end(), segtree[len + 1].begin() + i);
+                        inv_fft(aux);
+                        aux[0] -= 2;
+                        right_half_fft(aux);
+                        std::copy(aux.begin(), aux.end(), segtree[len + 1].begin() + i + aux.size());
+                    } else {
+                        inv_fft(aux);
+                        aux[0]--;
+                        std::copy(aux.begin(), aux.end(), segtree[len + 1].begin() + i);
+                        segtree[len + 1][1 << (len + 1)]++;
+                    }
+                }
+            }
+        }
+
+        std::vector<mint> evaluate(polynom_t<mint> f) const {
+            if (static_cast<int>(f.size()) > (1 << l)) {
+                f %= segtree[l];
+            }
+            assert(static_cast<int>(f.size()) <= (1 << l));
+            f.resize(1 << (l + 1));
+            std::rotate(f.begin(), std::prev(f.end()), f.end());
+            fft(f);
+
+            auto g = segtree[l];
+            std::reverse(g.begin(), g.begin() + 1 + (1 << l));
+            g.resize(1 << l);
+            g = g.inv(1 << l);
+            std::reverse(g.begin(), g.end());
+            g.resize(1 << (l + 1));
+            fft(g);
+            for (int i = 0; i < (1 << (l + 1)); i++) {
+                g[i] *= f[i];
+            }
+
+            polynom_t<mint> aux;
+            aux.reserve(1 << l);
+            for (int len = l - 1; len >= 0; len--) {
+                aux.resize(1 << (len + 1));
+                for (int i = 0; i < (1 << (l + 1)); i += (1 << (len + 2))) {
+                    for (int j = 0; j < static_cast<int>(aux.size()); j++) {
+                        aux[j] = g[i + j + (1 << (len + 1))];
+                    }
+                    inv_right_half_fft(aux);
+                    fft(aux);
+                    std::copy(aux.begin(), aux.end(), g.begin() + i + (1 << (len + 1)));
+                    for (int j = 0; j < (1 << (len + 1)); j++) {
+                        auto x = g[i + j] - g[i + j + (1 << (len + 1))];
+                        g[i + j + (1 << (len + 1))] = x * segtree[len][i + j];
+                        g[i + j] = x * segtree[len][i + j + (1 << (len + 1))];
+                    }
+                }
+            }
+
+            std::vector<mint> eval(n_points);
+            for (int i = 0; i < n_points; i++) {
+                eval[i] = (g[2 * i] - g[2 * i + 1]) * fft_data.inv_l[l + 1];
+            }
+            return eval;
+        }
+
+        polynom_t<mint> interpolate(const std::vector<mint> &y) const {
+            auto prod = segtree[l];
+            prod.erase(prod.begin(), prod.begin() + ((1 << l) - n_points));
+            auto values = evaluate(prod.derivative());
+
+            polynom_t<mint> aux;
+            aux.reserve(1 << l);
+            polynom_t<mint> result(1 << (l + 1));
+            for (int i = 0; i < (1 << l); i++) {
+                aux = {i < n_points ? y[i] / values[i] : 0, 0};
+                fft(aux);
+                result[i << 1] = aux[0];
+                result[i << 1 | 1] = aux[1];
+            }
+
+            polynom_t<mint> next(1 << (l + 1));
+            for (int len = 0; len < l; len++) {
+                aux.resize(1 << (len + 1));
+                for (int i = 0; i < (1 << (l + 1)); i += (1 << (len + 2))) {
+                    for (int j = 0; j < (1 << (len + 1)); j++) {
+                        aux[j] = segtree[len][i + j] * result[i + j + aux.size()]
+                               + segtree[len][i + j + aux.size()] * result[i + j];
+                    }
+                    if (len + 1 < l) {
+                        std::copy(aux.begin(), aux.end(), next.begin() + i);
+                        inv_fft(aux);
+                        right_half_fft(aux);
+                        std::copy(aux.begin(), aux.end(), next.begin() + i + (1 << (len + 1)));
+                    } else {
+                        inv_fft(aux);
+                        std::copy(aux.begin(), aux.end(), next.begin());
+                    }
+                }
+                result.swap(next);
+            }
+            result.erase(result.begin(), result.begin() + ((1 << l) - n_points));
+            return result.resize(n_points);
+        }
+    };
+
 public:
     polynom_t() : std::vector<mint>() {}
     polynom_t(size_t n, mint value = 0) : std::vector<mint>(n, value) {}
@@ -213,82 +342,14 @@ public:
             }
             return eval;
         }
+        return multipoint_evaluation_tree(std::max(size(), points.size()), points).evaluate(*this);
+    }
 
-        const int n_points = points.size();
-        const int n = std::max(size(), points.size());
-        int l = 1;
-        while ((1 << l) < n) {
-            l++;
-        }
-
-        polynom_t<mint> aux;
-        std::vector<polynom_t<mint>> segtree(l + 1, polynom_t<mint>(1 << (l + 1)));
-        for (int i = 0; i < (1 << l); i++) {
-            aux = {-(i < n_points ? points[i] : 0), 1};
-            fft(aux);
-            segtree[0][i << 1] = aux[0];
-            segtree[0][(i << 1) + 1] = aux[1];
-        }
-
-        aux.reserve(1 << l);
-        for (int len = 0; len < l; len++) {
-            aux.resize(1 << (len + 1));
-            for (int i = 0; i < (1 << (l + 1)); i += (1 << (len + 2))) {
-                for (int j = 0; j < static_cast<int>(aux.size()); j++) {
-                    aux[j] = segtree[len][i + j] * segtree[len][i + j + aux.size()];
-                }
-                if (len + 1 < l) {
-                    std::copy(aux.begin(), aux.end(), segtree[len + 1].begin() + i);
-                    inv_fft(aux);
-                    aux[0] -= 2;
-                    right_half_fft(aux);
-                    std::copy(aux.begin(), aux.end(), segtree[len + 1].begin() + i + aux.size());
-                } else {
-                    inv_fft(aux);
-                    aux[0]--;
-                    std::copy(aux.begin(), aux.end(), segtree[len + 1].begin() + i);
-                    segtree[len + 1][1 << (len + 1)]++;
-                }
-            }
-        }
-
-        std::reverse(segtree[l].begin(), segtree[l].begin() + 1 + (1 << l));
-        segtree[l].resize(1 << l);
-        segtree[l] = segtree[l].inv(1 << l);
-        std::reverse(segtree[l].begin(), segtree[l].end());
-        segtree[l].resize(1 << (l + 1));
-        fft(segtree[l]);
-
-        auto this_copy = *this;
-        this_copy.resize(1 << (l + 1));
-        std::rotate(this_copy.begin(), std::prev(this_copy.end()), this_copy.end());
-        fft(this_copy);
-        for (int i = 0; i < (1 << (l + 1)); i++) {
-            segtree[l][i] *= this_copy[i];
-        }
-
-        for (int len = l - 1; len >= 0; len--) {
-            aux.resize(1 << (len + 1));
-            for (int i = 0; i < (1 << (l + 1)); i += (1 << (len + 2))) {
-                for (int j = 0; j < static_cast<int>(aux.size()); j++) {
-                    aux[j] = segtree[l][i + j + (1 << (len + 1))];
-                }
-                inv_right_half_fft(aux);
-                fft(aux);
-                std::copy(aux.begin(), aux.end(), segtree[l].begin() + i + (1 << (len + 1)));
-                for (int j = 0; j < (1 << (len + 1)); j++) {
-                    auto x = segtree[l][i + j] - segtree[l][i + j + (1 << (len + 1))];
-                    segtree[l][i + j + (1 << (len + 1))] = x * segtree[len][i + j];
-                    segtree[l][i + j] = x * segtree[len][i + j + (1 << (len + 1))];
-                }
-            }
-        }
-
-        std::vector<mint> eval(n_points);
-        for (int i = 0; i < n_points; i++) {
-            eval[i] = (segtree[l][2 * i] - segtree[l][2 * i + 1]) * fft_data.inv_l[l + 1];
-        }
-        return eval;
+    // Interpolates polynomial f, such that f(x[i]) = y[i].
+    // O(n log^2).
+    static polynom_t<mint> interpolate(const std::vector<mint> &x, const std::vector<mint> &y) {
+        assert(x.size() == y.size());
+        return multipoint_evaluation_tree(x.size(), x).interpolate(y);
     }
 
     polynom_t<mint> operator-() const {
@@ -358,7 +419,7 @@ public:
     }
 
     // Division with remainder.
-    // O(nlog).
+    // O(n log).
     polynom_t<mint>& operator/=(const polynom_t<mint> &another) {
         polynom_t<mint> a(*this), b(another);
         a.normalize(), b.normalize();
@@ -390,7 +451,7 @@ public:
         return *this = quotient;
     }
 
-    // O(nlog).
+    // O(n log).
     polynom_t<mint>& operator%=(const polynom_t<mint> &another) {
         *this -= (*this) / another * another;
         normalize();
@@ -419,7 +480,7 @@ public:
     }
 
     // Returns p^{-1} modulo x^{degree}.
-    // O(nlog).
+    // O(n log).
     polynom_t<mint> inv(int degree) const {
         assert(!empty() && (*this)[0] != mint(0) && "polynom is not invertable");
 
@@ -473,14 +534,14 @@ public:
     }
 
     // Returns log(p) modulo x^{degree}.
-    // O(nlog).
+    // O(n log).
     polynom_t<mint> log(int degree) const {
         assert(!empty() && (*this)[0] == mint(1) && "log is not defined");
         return (derivative().resize(std::min<int>(degree, size())) * inv(degree)).resize(degree).integral(mint(0)).resize(degree);
     }
 
     // Returns exp(p) modulo x^{degree}.
-    // O(nlog).
+    // O(n log).
     polynom_t<mint> exp(int degree) const {
         assert(!empty() && (*this)[0] == mint(0) && "exp is not defined");
 
@@ -565,7 +626,7 @@ public:
     }
 
     // Returns p^{d} modulo x^{degree}.
-    // O(nlog).
+    // O(n log).
     polynom_t<mint> power(int64_t d, int degree) const {
         if (!d || !degree) {
             return polynom_t<mint>{1}.resize(degree);
