@@ -650,6 +650,31 @@ public:
         return result;
     }
 
+    // Returns f(x + c).
+    // O(n log).
+    polynom_t<mint> change_of_variable(mint c) const {
+        int n = size();
+        polynom_t<mint> p(n), q(n);
+        mint fact = 1, ifact = 1, power = 1;
+        for (int i = 0; i < n; i++) {
+            p[n - 1 - i] = (*this)[i] * fact;
+            q[i] = power * ifact;
+            fact *= i + 1;
+            ifact *= fft_data.inv(i + 1);
+            power *= c;
+        }
+
+        auto result = p * q;
+        result.resize(n);
+        std::reverse(result.begin(), result.end());
+        ifact = 1;
+        for (int i = 0; i < n; i++) {
+            result[i] *= ifact;
+            ifact *= fft_data.inv(i + 1);
+        }
+        return result;
+    }
+
     template<typename V>
     std::enable_if_t<!std::is_same_v<V, polynom_t<mint>>, polynom_t<mint>&> operator*=(const V &value) {
         for (auto &x : *this) {
