@@ -42,7 +42,7 @@ public:
     T query(int l, int r) {
         assert(l < r);
         if (r - l == 1) {
-            return T(single[l]);
+            return single[l];
         }
         r--;
         int level = std::__lg(l ^ r);
