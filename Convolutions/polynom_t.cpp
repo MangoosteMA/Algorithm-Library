@@ -37,7 +37,7 @@ private:
         // roots[x] = root.power((MOD - 1) / 2^x)
         // inv_roots[x] = roots[x].inv()
         std::array<mint, RANK> roots, inv_roots;
-        // inv_n[x] = 2^{-x}
+        // inv_l[x] = 2^{-x}
         std::array<mint, RANK> inv_l;
         // r_transition[x] = root.power((MOD - 1) * (3 - 2^{x + 1}) / 2^{x + 2})
         // inv_r_transition[x] = r_transition[x].inv()
