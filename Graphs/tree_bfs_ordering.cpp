@@ -96,7 +96,8 @@ public:
     }
 
     /*
-     * Returns set of at most 2 * dist + 1 disjoint ranges, containing all verteces at the distance of at most 'dist'.
+     * Returns set of at most 2 * dist + 1 disjoint ranges, containing all verteces
+       at the distance of at most 'dist' from vertex 'v'.
      * Complexity: O(dist * log(n)).
      */
     std::vector<std::pair<int, int>> ranges(int v, int dist) {
