@@ -53,7 +53,7 @@ struct lca_tree {
     }
  
     // Init function.
-    void build(int root = 0) {
+    void build(int root) {
         tin.resize(n);
         tout.resize(n);
         parent.assign(n, -1);
