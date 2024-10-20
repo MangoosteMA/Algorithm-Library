@@ -39,7 +39,7 @@ struct static_modular_int {
     }
 
     mint inv() const {
-        return power(-1);
+        return power(mod - 2);
     }
 
     mint& operator=(const mint &x) {
