@@ -21,7 +21,7 @@ T floor_sum(T k, T b, T m, T n) {
  * Require: m > 0, n >= 0.
  */
 template<typename T>
-T mod_sum(T k, T b, ll m, ll n) {
+T mod_sum(T k, T b, T m, T n) {
     k = (k % m + m) % m;
     b = (b % m + m) % m;
     return n * (n - 1) / 2 * k + n * b - m * floor_sum(k, b, m, n);
@@ -41,4 +41,52 @@ T count_remainders(T k, T b, T v, T m, T n) {
         return n;
     }
     return (mod_sum<T>(k, b - v - 1, m, n) - mod_sum<T>(k, b, m, n) + n * (v + 1)) / m;
+}
+
+/*
+ * Returns min_{x=0}^{n - 1} (kx + b) mod m
+ * Require: n, m > 0, 0 <= b, k < m
+ */
+template<typename T>
+T min_of_mod_of_linear(T n, T m, T k, T b, T step_cost = 1, T overflow_cost = 0);
+
+/*
+ * Returns max_{x=0}^{n - 1} (kx + b) mod m
+ * Require: n, m > 0, 0 <= b, k < m
+ */
+template<typename T>
+T max_of_mod_of_linear(T n, T m, T k, T b, T step_cost = 1, T overflow_cost = 0);
+
+template<typename T>
+T max_of_mod_of_linear(T n, T m, T k, T b, T step_cost, T overflow_cost) {
+    if (k == 0) {
+        return b;
+    }
+    if (b < m - k) {
+        T steps = (m - b - 1) / k;
+        T cost = step_cost * steps;
+        if (cost >= n) {
+            return k * ((n - 1) / step_cost) + b;
+        }
+        n -= cost;
+        b += steps * k;
+    }
+    return m - 1 - min_of_mod_of_linear(n, k, m % k, m - 1 - b, (m / k) * step_cost + overflow_cost, step_cost);
+}
+
+template<typename T>
+T min_of_mod_of_linear(T n, T m, T k, T b, T step_cost, T overflow_cost) {
+    if (k == 0) {
+        return b;
+    }
+    if (b >= k) {
+        T steps = (m - b + k - 1) / k;
+        T cost = step_cost * steps + overflow_cost;
+        if (cost >= n) {
+            return b;
+        }
+        n -= cost;
+        b += steps * k - m;
+    }
+    return k - 1 - max_of_mod_of_linear(n, k, m % k, k - 1 - b, (m / k) * step_cost + overflow_cost, step_cost);
 }
