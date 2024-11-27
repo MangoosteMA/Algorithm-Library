@@ -33,6 +33,7 @@ std::vector<std::vector<int>> alcs(const T &s, const T &t) {
 
 /*
  * T is an array-like type.
+ * Zero based.
  * Requires O(|s| * |t|) memory.
  * This implementation is not very fast and can be improved if queries are offline.
  */
