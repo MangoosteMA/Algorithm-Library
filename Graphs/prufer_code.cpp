@@ -1,5 +1,5 @@
 // Returns prufer code (0-indexed)
-std::vector<int> buildPruferCode(const std::vector<std::pair<int, int>> &edges) {
+std::vector<int> build_prufer_code(const std::vector<std::pair<int, int>> &edges) {
     int vertices = edges.size() + 1;
     if (vertices == 1) {
         return {};
@@ -42,7 +42,7 @@ std::vector<int> buildPruferCode(const std::vector<std::pair<int, int>> &edges) 
 }
 
 // Returns list of edges of the decoded tree (0-indexed)
-std::vector<std::pair<int, int>> decodePruferCode(const std::vector<int> &prufer) {
+std::vector<std::pair<int, int>> decode_prufer_code(const std::vector<int> &prufer) {
     int vertices = prufer.size() + 2;
     std::vector<int> count(vertices);
     for (auto vertex : prufer) {
