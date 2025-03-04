@@ -1,3 +1,5 @@
+#include <bits/stdc++.h>
+
 namespace helpers {
     template<typename T, typename = void>
     struct is_printable : std::false_type {};
@@ -24,19 +26,22 @@ namespace __to_string {
     template<size_t SZ>
     std::string to_string(const std::bitset<SZ> &bs) {
         std::string s;
-        for (size_t i = 0; i < SZ; i++)
+        for (size_t i = 0; i < SZ; i++) {
             s += bs[i] ? "1" : "0";
-
+        }
         return s;
     }
 
     std::string to_string(const std::vector<bool> &v) {
         std::string s;
-        for (size_t i = 0; i < v.size(); i++)
+        for (size_t i = 0; i < v.size(); i++) {
             s += v[i] ? "1" : "0";
-
+        }
         return s;
     }
+
+    template<typename T>
+    typename std::enable_if_t<helpers::is_printable<T>::value, std::string> to_string(const std::vector<std::vector<T>> &v);
 
     template<typename T>
     typename std::enable_if_t<helpers::is_printable<T>::value, std::string> to_string(const T &t);
@@ -51,15 +56,24 @@ namespace __to_string {
     std::string to_string(std::priority_queue<T, _Container, _Compare> pq);
 
     template<typename T>
+    typename std::enable_if_t<helpers::is_printable<T>::value, std::string> to_string(const std::vector<std::vector<T>> &v) {
+        std::string s;
+        for (const auto &arr : v) {
+            s += "\n" + to_string(arr);
+        }
+        return s;
+    }
+
+    template<typename T>
     typename std::enable_if_t<helpers::is_printable<T>::value, std::string> to_string(const T &t) {
         std::stringstream ss;
-        if constexpr (helpers::is_iterable<T>::value)
+        if constexpr (helpers::is_iterable<T>::value) {
             ss << '{';
-
+        }
         ss << std::fixed << std::setprecision(10) << t;
-        if constexpr (helpers::is_iterable<T>::value)
+        if constexpr (helpers::is_iterable<T>::value) {
             ss << '}';
-
+        }
         return ss.str();
     }
 
@@ -93,9 +107,9 @@ namespace __to_string {
     template<typename T>
     std::string to_string(std::stack<T> st) {
         std::vector<T> values;
-        for (; !st.empty(); st.pop())
+        for (; !st.empty(); st.pop()) {
             values.push_back(st.top());
-        
+        }
         std::reverse(values.begin(), values.end());
         return to_string(values);
     }
