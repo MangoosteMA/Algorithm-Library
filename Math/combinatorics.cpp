@@ -68,6 +68,18 @@ namespace combinatorics {
     mint catalan(int n) {
         return catalan(n, n);
     }
+
+    // Number of balanced bracket sequences with n open and m closing brackets
+    // with initial_balance equak to bal
+    mint catalan_init_bal(int n, int m, int bal) {
+        return choose(n + m, n) - choose(n + m, n + bal + 1);
+    }
+
+    // Number of possible not balanced bracket sequences with n open and m closing brackets
+    // with balance <= max_bal
+    mint catalan_max_bal(int n, int m, int max_bal) {
+        return catalan_init_bal(m, n, max_bal);
+    }
 } // namespace combinatorics
 
 using namespace combinatorics;
