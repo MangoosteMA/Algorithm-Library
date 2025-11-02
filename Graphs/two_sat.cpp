@@ -1,7 +1,6 @@
 /*
  * Include strongly_connected_components to use it.
-*/
-
+ */
 struct two_sat {
     int n;
     strongly_connected_components g;
@@ -26,8 +25,8 @@ struct two_sat {
     }
 
     // Returns an empty vector if there is no solution.
-    std::vector<bool> solve() const {
-        const std::vector<int> scc = g.scc();
+    std::vector<bool> solve() {
+        const std::vector<int> scc = g.solve();
         std::vector<bool> solution(n);
         for (int i = 0; i < n; i++) {
             if (scc[i << 1] == scc[i << 1 | 1])
@@ -39,7 +38,7 @@ struct two_sat {
     }
 
     // Returns true if solution exists.
-    bool any() const {
+    bool any() {
         const std::vector<int> scc = g.scc();
         for (int i = 0; i < n; i++)
             if (scc[i << 1] == scc[i << 1 | 1])
