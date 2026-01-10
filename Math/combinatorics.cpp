@@ -70,7 +70,7 @@ namespace combinatorics {
     }
 
     // Number of balanced bracket sequences with n open and m closing brackets
-    // with initial_balance equak to bal
+    // with initial_balance equal to bal
     mint catalan_init_bal(int n, int m, int bal) {
         return choose(n + m, n) - choose(n + m, n + bal + 1);
     }
