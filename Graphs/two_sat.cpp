@@ -26,11 +26,12 @@ struct two_sat {
 
     // Returns an empty vector if there is no solution.
     std::vector<bool> solve() {
-        const std::vector<int> scc = g.solve();
+        const auto scc = g.solve();
         std::vector<bool> solution(n);
         for (int i = 0; i < n; i++) {
-            if (scc[i << 1] == scc[i << 1 | 1])
+            if (scc[i << 1] == scc[i << 1 | 1]) {
                 return std::vector<bool>();
+            }
 
             solution[i] = scc[i << 1] < scc[i << 1 | 1];
         }
@@ -39,10 +40,12 @@ struct two_sat {
 
     // Returns true if solution exists.
     bool any() {
-        const std::vector<int> scc = g.scc();
-        for (int i = 0; i < n; i++)
-            if (scc[i << 1] == scc[i << 1 | 1])
+        const auto scc = g.solve();
+        for (int i = 0; i < n; i++) {
+            if (scc[i << 1] == scc[i << 1 | 1]) {
                 return false;
+            }
+        }
 
         return true;
     }
