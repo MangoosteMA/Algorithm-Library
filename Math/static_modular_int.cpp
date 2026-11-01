@@ -25,8 +25,12 @@ struct static_modular_int {
     static_modular_int(T value) : value(normalize(value, mod)) {}
 
     static constexpr int get_mod() {
-		return mod;
-	}
+        return mod;
+    }
+
+    int get() const {
+        return value;
+    }
 
     template<typename T>
     mint power(T degree) const {
